@@ -1,6 +1,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using SchedulingService.Models;
 
 namespace SchedulingService.Data;
 
@@ -22,5 +23,6 @@ public class SchedulingDbContext : DbContext
         }
         optionsBuilder.UseSqlServer(connectionString);
     }
-    // DbSet-s will come here...
+
+    public DbSet<InterviewSlots> InterviewSlots => Set<InterviewSlots>();
 }            

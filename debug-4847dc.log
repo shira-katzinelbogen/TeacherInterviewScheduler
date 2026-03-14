@@ -1,0 +1,31 @@
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H1","location":"Program.cs","message":"Starting DB connectivity check","data":{},"timestamp":1773518581678}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H2","location":"Program.cs","message":"Created SchedulingDbContext instance","data":{},"timestamp":1773518581761}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H4","location":"Program.cs","message":"Exception during DB connectivity check","data":{"exceptionType":"System.InvalidOperationException","message":"The entity type 'InterviewSlots' requires a primary key to be defined. If you intended to use a keyless entity type, call 'HasNoKey' in 'OnModelCreating'. For more information on keyless entity types, see https://go.microsoft.com/fwlink/?linkid=2141943."},"timestamp":1773518581968}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H1","location":"Program.cs","message":"Starting DB connectivity check","data":{},"timestamp":1773523621724}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H2","location":"Program.cs","message":"Created SchedulingDbContext instance","data":{},"timestamp":1773523621796}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H4","location":"Program.cs","message":"Exception during DB connectivity check","data":{"exceptionType":"System.InvalidOperationException","message":"The entity type 'InterviewSlots' requires a primary key to be defined. If you intended to use a keyless entity type, call 'HasNoKey' in 'OnModelCreating'. For more information on keyless entity types, see https://go.microsoft.com/fwlink/?linkid=2141943."},"timestamp":1773523621989}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H1","location":"Program.cs","message":"Starting DB connectivity check","data":{},"timestamp":1773523642529}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H2","location":"Program.cs","message":"Created SchedulingDbContext instance","data":{},"timestamp":1773523642653}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H3","location":"Program.cs","message":"Result from Database.CanConnect()","data":{"canConnect":false},"timestamp":1773523659373}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H1","location":"Program.cs","message":"Starting DB connectivity check","data":{},"timestamp":1773524274557}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H2","location":"Program.cs","message":"Created SchedulingDbContext instance","data":{},"timestamp":1773524274841}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H3","location":"Program.cs","message":"Result from Database.CanConnect()","data":{"canConnect":false},"timestamp":1773524291606}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H5","location":"Program.cs","message":"OpenConnection exception","data":{"message":"A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: Named Pipes Provider, error: 40 - Could not open a connection to SQL Server)"},"timestamp":1773524291643}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H1","location":"Program.cs","message":"Starting DB connectivity check","data":{},"timestamp":1773525023019}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H2","location":"Program.cs","message":"Created SchedulingDbContext instance","data":{},"timestamp":1773525023106}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H3","location":"Program.cs","message":"Result from Database.CanConnect()","data":{"canConnect":false},"timestamp":1773525023794}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H5","location":"Program.cs","message":"OpenConnection exception","data":{"message":"Cannot open database \"SchedulingDB\" requested by the login. The login failed.
+Login failed for user 'Shmuel\yap'."},"timestamp":1773525024018}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H1","location":"Program.cs","message":"Starting DB connectivity check","data":{},"timestamp":1773526411602}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H2","location":"Program.cs","message":"Created SchedulingDbContext instance","data":{},"timestamp":1773526411927}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H3","location":"Program.cs","message":"Result from Database.CanConnect()","data":{"canConnect":false},"timestamp":1773526413094}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H5","location":"Program.cs","message":"OpenConnection exception","data":{"message":"Cannot open database \"SchedulingDB\" requested by the login. The login failed.
+Login failed for user 'Shmuel\yap'."},"timestamp":1773526413126}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H1","location":"Program.cs","message":"Starting DB connectivity check","data":{},"timestamp":1773526549163}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H2","location":"Program.cs","message":"Created SchedulingDbContext instance","data":{},"timestamp":1773526549288}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H3","location":"Program.cs","message":"Result from Database.CanConnect()","data":{"canConnect":false},"timestamp":1773526549808}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H5","location":"Program.cs","message":"OpenConnection exception","data":{"message":"Cannot open database \"SchedulingDB\" requested by the login. The login failed.
+Login failed for user 'Shmuel\yap'."},"timestamp":1773526549815}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H1","location":"Program.cs","message":"Starting DB connectivity check","data":{},"timestamp":1773526655774}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H2","location":"Program.cs","message":"Created SchedulingDbContext instance","data":{},"timestamp":1773526655864}
+{"sessionId":"4847dc","runId":"initial","hypothesisId":"H3","location":"Program.cs","message":"Result from Database.CanConnect()","data":{"canConnect":true},"timestamp":1773526656423}
