@@ -1,11 +1,12 @@
 using System;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using SchedulingService.Models;
 
 namespace SchedulingService.Data;
 
 public class SchedulingDbContext : DbContext
 {
+    public DbSet<StudentAvailability> StudentAvailabilities => Set<StudentAvailability>();
 
     public SchedulingDbContext(){}
     public SchedulingDbContext(DbContextOptions<SchedulingDbContext> options) : base(options){}
@@ -22,5 +23,13 @@ public class SchedulingDbContext : DbContext
         }
         optionsBuilder.UseSqlServer(connectionString);
     }
-    // DbSet-s will come here...
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<StudentAvailability>(e =>
+        {
+            e.ToTable("StudentAvailability");
+            e.HasKey(x => x.Id);
+        });
+    }
 }            
