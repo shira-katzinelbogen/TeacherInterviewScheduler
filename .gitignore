@@ -20,3 +20,6 @@ artifacts/
 # User-specific
 *.rsuser
 *.userprefs
+
+# Logs
+debug-*.log

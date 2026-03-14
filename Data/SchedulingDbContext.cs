@@ -7,6 +7,7 @@ namespace SchedulingService.Data;
 public class SchedulingDbContext : DbContext
 {
     public DbSet<StudentAvailability> StudentAvailabilities => Set<StudentAvailability>();
+    public DbSet<InterviewSlots> InterviewSlots => Set<InterviewSlots>();
 
     public SchedulingDbContext(){}
     public SchedulingDbContext(DbContextOptions<SchedulingDbContext> options) : base(options){}
@@ -30,6 +31,12 @@ public class SchedulingDbContext : DbContext
         {
             e.ToTable("StudentAvailability");
             e.HasKey(x => x.Id);
+        });
+
+        modelBuilder.Entity<InterviewSlots>(e =>
+        {
+            e.ToTable("InterviewSlots");
+            e.HasKey(x => x.InterviewSlotID);
         });
     }
 }            
