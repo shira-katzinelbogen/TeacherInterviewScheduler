@@ -9,6 +9,8 @@ public class SchedulingDbContext : DbContext
 
     public SchedulingDbContext(){}
     public SchedulingDbContext(DbContextOptions<SchedulingDbContext> options) : base(options){}
+
+    public DbSet<Entities.ScheduledInterview> ScheduledInterviews => Set<Entities.ScheduledInterview>();
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (optionsBuilder.IsConfigured)
