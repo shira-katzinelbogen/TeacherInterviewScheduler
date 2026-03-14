@@ -7,6 +7,7 @@ namespace SchedulingService.Data;
 public class SchedulingDbContext : DbContext
 {
     public DbSet<StudentAvailability> StudentAvailabilities => Set<StudentAvailability>();
+    public DbSet<InterviewSlots> InterviewSlots => Set<InterviewSlots>();
 
     public SchedulingDbContext() { }
 
@@ -33,6 +34,12 @@ public class SchedulingDbContext : DbContext
                 .HasMaxLength(500);
 
             entity.HasIndex(e => e.StudentId);
+        });
+
+        modelBuilder.Entity<InterviewSlots>(e =>
+        {
+            e.ToTable("InterviewSlots");
+            e.HasKey(x => x.InterviewSlotID);
         });
     }
 }            
