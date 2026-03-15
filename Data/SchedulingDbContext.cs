@@ -36,10 +36,26 @@ public class SchedulingDbContext : DbContext
             entity.HasIndex(e => e.StudentId);
         });
 
-        modelBuilder.Entity<InterviewSlots>(e =>
+        modelBuilder.Entity<InterviewSlots>(entity =>
         {
-            e.ToTable("InterviewSlots");
-            e.HasKey(x => x.InterviewSlotID);
+            entity.ToTable("InterviewSlots");
+            entity.HasKey(e => e.InterviewSlotID);
+        });
+
+        modelBuilder.Entity<ScheduledInterview>(entity =>
+        {
+            entity.ToTable("ScheduledInterview");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Comments)
+                .HasMaxLength(500);
+
+            entity.HasIndex(e => e.StudentId);
+            entity.HasIndex(e => e.InterviewSlotID);
+
+            entity.HasOne(e => e.InterviewSlot)
+                  .WithMany()
+                  .HasForeignKey(e => e.InterviewSlotID);
         });
     }
 }            
