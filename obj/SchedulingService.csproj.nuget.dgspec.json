@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\sbhtk\\TeacherInterviewScheduler\\SchedulingService.csproj": {}
+    "C:\\My Studies\\פרויקט צוותים\\TeacherInterviewScheduler\\SchedulingService.csproj": {}
   },
   "projects": {
-    "C:\\Users\\sbhtk\\TeacherInterviewScheduler\\SchedulingService.csproj": {
+    "C:\\My Studies\\פרויקט צוותים\\TeacherInterviewScheduler\\SchedulingService.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\sbhtk\\TeacherInterviewScheduler\\SchedulingService.csproj",
+        "projectUniqueName": "C:\\My Studies\\פרויקט צוותים\\TeacherInterviewScheduler\\SchedulingService.csproj",
         "projectName": "SchedulingService",
-        "projectPath": "C:\\Users\\sbhtk\\TeacherInterviewScheduler\\SchedulingService.csproj",
-        "packagesPath": "C:\\Users\\sbhtk\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\sbhtk\\TeacherInterviewScheduler\\obj\\",
+        "projectPath": "C:\\My Studies\\פרויקט צוותים\\TeacherInterviewScheduler\\SchedulingService.csproj",
+        "packagesPath": "C:\\Users\\user1\\.nuget\\packages\\",
+        "outputPath": "C:\\My Studies\\פרויקט צוותים\\TeacherInterviewScheduler\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\sbhtk\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\user1\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -43,9 +43,8 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "all"
-        },
-        "SdkAnalysisLevel": "9.0.100"
+          "auditMode": "direct"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -82,7 +81,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.302/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

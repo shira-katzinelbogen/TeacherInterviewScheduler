@@ -6,11 +6,12 @@ namespace SchedulingService.Data;
 
 public class SchedulingDbContext : DbContext
 {
-    public DbSet<StudentAvailability> StudentAvailabilities => Set<StudentAvailability>();
     public SchedulingDbContext(){}
     public SchedulingDbContext(DbContextOptions<SchedulingDbContext> options) : base(options){}
 
-    public DbSet<Entities.ScheduledInterview> ScheduledInterviews => Set<Entities.ScheduledInterview>();
+    public DbSet<InterviewSlots> InterviewSlots => Set<InterviewSlots>();
+    public DbSet<StudentAvailability> StudentAvailabilities => Set<StudentAvailability>();
+    public DbSet<ScheduledInterview> ScheduledInterviews => Set<ScheduledInterview>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -33,6 +34,12 @@ public class SchedulingDbContext : DbContext
                 .HasMaxLength(500);
 
             entity.HasIndex(e => e.StudentId);
+        });
+
+        modelBuilder.Entity<InterviewSlots>(e =>
+        {
+            e.ToTable("InterviewSlots");
+            e.HasKey(x => x.InterviewSlotID);
         });
     }
 }            

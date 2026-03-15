@@ -1,6 +1,9 @@
-using SchedulingService.Enums;
+namespace SchedulingService.Models
+{
 
-namespace SchedulingService.Data.Entities;
+    using System;
+    using System.ComponentModel.DataAnnotations;
+    using SchedulingService.Enums;
 
 /// <summary>
 /// ראיון בפועל - הקישור בין ראיון לבת ששובצה אליו.
@@ -8,6 +11,7 @@ namespace SchedulingService.Data.Entities;
 /// </summary>
 public class ScheduledInterview
 {
+    [Key]
     public long Id { get; set; }
 
     /// <summary>
@@ -18,7 +22,7 @@ public class ScheduledInterview
     /// <summary>
     /// קישור לטבלת InterviewSlots - יוגדר כשהמודל יידחף.
     /// </summary>
-    public long InterviewSlotId { get; set; }
+    public long InterviewSlotID { get; set; }
 
     /// <summary>
     /// בוצע / בוטל / ממתין לאישור / נקבע.
@@ -33,4 +37,6 @@ public class ScheduledInterview
     // Navigation properties - uncomment and fix type when Student and InterviewSlot entities exist:
     // public Student Student { get; set; } = null!;
     // public InterviewSlot InterviewSlot { get; set; } = null!;
+}
+
 }
