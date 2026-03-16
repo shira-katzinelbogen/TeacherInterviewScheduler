@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\SchedulingService.csproj": {}
+    "C:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\SchedulingService.csproj": {}
   },
   "projects": {
-    "c:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\SchedulingService.csproj": {
+    "C:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\SchedulingService.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\SchedulingService.csproj",
+        "projectUniqueName": "C:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\SchedulingService.csproj",
         "projectName": "SchedulingService",
-        "projectPath": "c:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\SchedulingService.csproj",
+        "projectPath": "C:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\SchedulingService.csproj",
         "packagesPath": "C:\\Users\\גילי\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\obj\\",
+        "outputPath": "C:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
