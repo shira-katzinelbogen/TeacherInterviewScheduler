@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SchedulingService")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7ada9b38d3f8872047be1f3acffbc9e9873ef17b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f8be505eec4232302502091bd5443872ef2d0d68")]
 [assembly: System.Reflection.AssemblyProductAttribute("SchedulingService")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SchedulingService")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
