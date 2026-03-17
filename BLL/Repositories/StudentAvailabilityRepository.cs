@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 using Microsoft.EntityFrameworkCore;
 using SchedulingService.Data;
 using SchedulingService.Models;
@@ -23,7 +20,7 @@ public class StudentAvailabilityRepository : IRepository<StudentAvailability>
     }
 
     /// <inheritdoc />
-    public Task<StudentAvailability?> GetByIdAsync(int id) =>
+    public Task<StudentAvailability?> GetByIdAsync(long id) =>
         _db.StudentAvailabilities.FindAsync(id).AsTask();
 
     /// <inheritdoc />
@@ -41,7 +38,7 @@ public class StudentAvailabilityRepository : IRepository<StudentAvailability>
     /// <summary>
     /// Returns all availability records for the given student.
     /// </summary>
-    public async Task<IReadOnlyList<StudentAvailability>> GetByStudentIdAsync(int studentId) =>
+    public async Task<IReadOnlyList<StudentAvailability>> GetByStudentIdAsync(long studentId) =>
         await _db.StudentAvailabilities
             .Where(sa => sa.StudentId == studentId)
             .ToListAsync();
@@ -50,7 +47,7 @@ public class StudentAvailabilityRepository : IRepository<StudentAvailability>
     /// Returns availability records fully contained within the given date range (StartTime &gt;= start, EndTime &lt;= end).
     /// </summary>
     public async Task<IReadOnlyList<StudentAvailability>> GetByStudentIdAndDateRangeAsync(
-        int studentId,
+        long studentId,
         DateTime start,
         DateTime end) =>
         await _db.StudentAvailabilities
@@ -63,7 +60,7 @@ public class StudentAvailabilityRepository : IRepository<StudentAvailability>
     /// Returns availability records that overlap the given date range (any overlap with [start, end]).
     /// </summary>
     public async Task<IReadOnlyList<StudentAvailability>> GetByStudentIdOverlappingDateRangeAsync(
-        int studentId,
+        long studentId,
         DateTime start,
         DateTime end) =>
         await _db.StudentAvailabilities
@@ -76,7 +73,7 @@ public class StudentAvailabilityRepository : IRepository<StudentAvailability>
     /// Returns availability records for the given student on the given date (by StartTime.Date).
     /// </summary>
     public async Task<IReadOnlyList<StudentAvailability>> GetSpecificStudentAvailabilityForDayAsync(
-        int studentId,
+        long studentId,
         DateTime date) =>
         await _db.StudentAvailabilities
             .Where(sa => sa.StudentId == studentId &&
@@ -87,7 +84,7 @@ public class StudentAvailabilityRepository : IRepository<StudentAvailability>
     /// Checks whether the student has any availability with status Available that overlaps [startTime, endTime].
     /// </summary>
     public async Task<bool> CheckIfSlotIsAvailableAsync(
-        int studentId,
+        long studentId,
         DateTime startTime,
         DateTime endTime) =>
         await _db.StudentAvailabilities

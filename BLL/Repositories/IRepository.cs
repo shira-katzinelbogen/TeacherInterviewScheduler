@@ -6,7 +6,7 @@ namespace SchedulingService.BLL.Repositories;
 
 public interface IRepository<T> where T : class
 {
-    Task<T?> GetByIdAsync(int id);
+    Task<T?> GetByIdAsync(long id);
     Task<IReadOnlyList<T>> GetAllAsync();
     Task AddAsync(T entity);
     Task AddRangeAsync(IEnumerable<T> entities);
