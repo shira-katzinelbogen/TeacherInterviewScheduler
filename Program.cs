@@ -21,6 +21,7 @@ builder.Services.AddDbContext<SchedulingDbContext>(options =>
 
 builder.Services.AddScoped<StudentAvailabilityRepository>();
 builder.Services.AddScoped<StudentAvailabilityService>();
+builder.Services.AddScoped<ScheduledInterviewsRepository>();
 
 builder.Services.AddSingleton<IMapper>(_ =>
 {
