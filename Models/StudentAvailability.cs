@@ -14,10 +14,10 @@ public class StudentAvailability
     /// <summary>Available / Not available (זמין / לא זמין)</summary>
     public AvailabilityStatus Status { get; set; } = 0;
 
-    /// <summary>Student-provided reason (e.g. Doctor's appointment, Interview)</summary>
+    /// <summary>Student-provided reason </summary>
     public string ReasonStudent { get; set; } = string.Empty;
 
-    /// <summary>Private/Interview - ENUM provided by another company</summary>
+    /// <summary>Private/Interview - ENUM </summary>
     public AvailabilityReasonKind ReasonStatus { get; set; } = 0;
 
     public StudentAvailability(long id, long studentId, DateTime startTime, DateTime endTime, AvailabilityStatus status, string reasonStudent, AvailabilityReasonKind reasonStatus)
