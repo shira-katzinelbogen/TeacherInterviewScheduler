@@ -17,7 +17,7 @@ public class InterviewSlotsRepository : IRepository<InterviewSlots>
         _db = db;
     }
 
-    public async Task<InterviewSlots?> GetByIdAsync(int id)
+    public async Task<InterviewSlots?> GetByIdAsync(long id)
     {
         return await _db.InterviewSlots
             .FirstOrDefaultAsync(s => s.InterviewSlotID == id);
