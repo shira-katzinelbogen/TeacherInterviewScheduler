@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,62 +18,127 @@ public class InterviewSlotsRepository : IRepository<InterviewSlots>
         _db = db;
     }
 
-    public async Task<InterviewSlots?> GetByIdAsync(int id)
-    {
-        return await _db.InterviewSlots
-            .FirstOrDefaultAsync(s => s.InterviewSlotID == id);
-    }
+    public Task<InterviewSlots?> GetByIdAsync(long id) =>
+        _db.InterviewSlots.FindAsync(id).AsTask();
 
-    public async Task<IReadOnlyList<InterviewSlots>> GetAllAsync()
-    {
-        return await _db.InterviewSlots.ToListAsync();
-    }
+    public async Task<IReadOnlyList<InterviewSlots>> GetAllAsync() =>
+        await _db.InterviewSlots.ToListAsync();
 
-    public async Task AddAsync(InterviewSlots interviewSlot)
-    {
-        await _db.InterviewSlots.AddAsync(interviewSlot);
-        await _db.SaveChangesAsync();
-    }
+    public async Task AddAsync(InterviewSlots entity) =>
+        await _db.InterviewSlots.AddAsync(entity);
 
-    public async Task AddRangeAsync(IEnumerable<InterviewSlots> interviewSlots)
-    {
-        await _db.InterviewSlots.AddRangeAsync(interviewSlots);
-        await _db.SaveChangesAsync();
-    }
+    public async Task AddRangeAsync(IEnumerable<InterviewSlots> entities) =>
+        await _db.InterviewSlots.AddRangeAsync(entities);
 
-    public void Update(InterviewSlots interviewSlot)
-    {
-        _db.InterviewSlots.Update(interviewSlot);
-    }
+    public void Update(InterviewSlots entity) =>
+        _db.InterviewSlots.Update(entity);
 
-    public void Remove(InterviewSlots interviewSlot)
-    {
-        _db.InterviewSlots.Remove(interviewSlot);
-    }
+    public void Remove(InterviewSlots entity) =>
+        _db.InterviewSlots.Remove(entity);
 
-    public void RemoveRange(IEnumerable<InterviewSlots> interviewSlots)
-    {
-        _db.InterviewSlots.RemoveRange(interviewSlots);
-    }
+    public void RemoveRange(IEnumerable<InterviewSlots> entities) =>
+        _db.InterviewSlots.RemoveRange(entities);
 
-    public IQueryable<InterviewSlots> Query()
-    {
-        return _db.InterviewSlots.AsQueryable();
-    }
+    public IQueryable<InterviewSlots> Query() =>
+        _db.InterviewSlots.AsQueryable();
 
-    /// <summary>Get slots by <see cref="SlotStatus"/> (Unassigned / Assigned).</summary>
-    public async Task<IReadOnlyList<InterviewSlots>> GetByStatusAsync(SlotStatus slotStatus)
-    {
-        return await _db.InterviewSlots
-            .Where(s => s.SlotStatus == slotStatus)
+    /// <summary>
+    /// Get all slots for a specific job.
+    /// </summary>
+    public async Task<IReadOnlyList<InterviewSlots>> GetByJobIdAsync(long jobId) =>
+        await _db.InterviewSlots
+            .Where(s => s.JobID == jobId)
+            .OrderBy(s => s.TimeStart)
             .ToListAsync();
+
+    /// <summary>
+    /// Get free (unassigned) slots for a specific job on a specific date.
+    /// </summary>
+    public async Task<IReadOnlyList<InterviewSlots>> GetAvailableSlotsByJobAndDateAsync(long jobId, DateTime date) =>
+        await _db.InterviewSlots
+            .Where(s =>
+                s.JobID == jobId &&
+                s.SlotStatus == SlotStatus.Unassigned &&
+                s.TimeStart.Date == date.Date)
+            .OrderBy(s => s.TimeStart)
+            .ToListAsync();
+
+    /// <summary>
+    /// Get slots whose time window is fully inside the given date-time range.
+    /// </summary>
+    public async Task<IReadOnlyList<InterviewSlots>> GetSlotsByDateRangeAsync(DateTime start, DateTime end) =>
+        await _db.InterviewSlots
+            .Where(s => s.TimeStart >= start && s.TimeEnd <= end)
+            .OrderBy(s => s.TimeStart)
+            .ToListAsync();
+
+    /// <summary>
+    /// Create a single free slot.
+    /// </summary>
+    public async Task CreateSingleSlotAsync(InterviewSlots entity) =>
+        await _db.InterviewSlots.AddAsync(entity);
+
+    /// <summary>
+    /// Update an existing slot.
+    /// </summary>
+    public Task UpdateSlotAsync(InterviewSlots entity)
+    {
+        _db.InterviewSlots.Update(entity);
+        return Task.CompletedTask;
     }
 
-    /// <summary>Get slots by <see cref="InterviewType"/> (Technical, Professional, Personal, Other).</summary>
-    public async Task<IReadOnlyList<InterviewSlots>> GetByInterviewTypeAsync(InterviewType interviewType)
+    /// <summary>
+    /// Update only the status of a slot.
+    /// Returns false when the slot is not found or status string is invalid.
+    /// </summary>
+    public async Task<bool> UpdateSlotStatusAsync(long id, string newStatus)
     {
-        return await _db.InterviewSlots
-            .Where(s => s.InterviewType == interviewType)
-            .ToListAsync();
+        var slot = await GetByIdAsync(id);
+        if (slot is null)
+        {
+            return false;
+        }
+
+        if (!Enum.TryParse<SlotStatus>(newStatus, ignoreCase: true, out var parsedStatus))
+        {
+            return false;
+        }
+
+        slot.SlotStatus = parsedStatus;
+        _db.InterviewSlots.Update(slot);
+        return true;
+    }
+
+    /// <summary>
+    /// Delete a slot by id.
+    /// Returns false if the slot was not found.
+    /// </summary>
+    public async Task<bool> DeleteSlotAsync(long id)
+    {
+        var slot = await GetByIdAsync(id);
+        if (slot is null)
+        {
+            return false;
+        }
+
+        _db.InterviewSlots.Remove(slot);
+        return true;
+    }
+
+    /// <summary>
+    /// Check if a slot is free (unassigned and without scheduled interviews).
+    /// </summary>
+    public async Task<bool> CheckIfSlotIsFreeAsync(long slotId)
+    {
+        var slot = await GetByIdAsync(slotId);
+        if (slot is null || slot.SlotStatus != SlotStatus.Unassigned)
+        {
+            return false;
+        }
+
+        var hasScheduled = await _db.ScheduledInterviews
+            .AnyAsync(si => si.InterviewSlotID == slotId);
+
+        return !hasScheduled;
     }
 }

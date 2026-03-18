@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\SchedulingService.csproj": {}
+    "d:\\Scheduling Project\\TeacherInterviewScheduler\\SchedulingService.csproj": {}
   },
   "projects": {
-    "C:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\SchedulingService.csproj": {
+    "d:\\Scheduling Project\\TeacherInterviewScheduler\\SchedulingService.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\SchedulingService.csproj",
+        "projectUniqueName": "d:\\Scheduling Project\\TeacherInterviewScheduler\\SchedulingService.csproj",
         "projectName": "SchedulingService",
-        "projectPath": "C:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\SchedulingService.csproj",
-        "packagesPath": "C:\\Users\\גילי\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\גילי\\OneDrive\\Desktop\\Project\\TeacherInterviewScheduler\\obj\\",
+        "projectPath": "d:\\Scheduling Project\\TeacherInterviewScheduler\\SchedulingService.csproj",
+        "packagesPath": "C:\\Users\\yap\\.nuget\\packages\\",
+        "outputPath": "d:\\Scheduling Project\\TeacherInterviewScheduler\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\גילי\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\yap\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -82,7 +82,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.311/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

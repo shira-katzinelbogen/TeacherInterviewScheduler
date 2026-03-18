@@ -17,7 +17,7 @@ public class StudentAvailabilityRepository : IRepository<StudentAvailability>
         _db = db;
     }
 
-    public Task<StudentAvailability?> GetByIdAsync(int id) =>
+    public Task<StudentAvailability?> GetByIdAsync(long id) =>
         _db.StudentAvailabilities.FindAsync(id).AsTask();
 
     public async Task<IReadOnlyList<StudentAvailability>> GetAllAsync() =>

@@ -17,7 +17,7 @@ public class ScheduledInterviewRepository : IRepository<ScheduledInterview>
         _db = db;
     }
 
-    public Task<ScheduledInterview?> GetByIdAsync(int id) =>
+    public Task<ScheduledInterview?> GetByIdAsync(long id) =>
         _db.ScheduledInterviews.FindAsync(id).AsTask();
 
     public async Task<IReadOnlyList<ScheduledInterview>> GetAllAsync() =>
