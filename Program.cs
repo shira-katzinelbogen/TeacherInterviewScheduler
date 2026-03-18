@@ -1,12 +1,38 @@
+using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
+using SchedulingService.BLL.Repositories;
+using SchedulingService.BLL.Services;
 using SchedulingService.Data;
+using SchedulingService.Mapping;
 
-var ctx = new SchedulingDbContext();
-try
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+
+builder.Services.AddDbContext<SchedulingDbContext>(options =>
 {
-    var canConnect = ctx.Database.CanConnect();
-    Console.WriteLine(canConnect ? "Connected to database successfully." : "Could not connect to database.");
-}
-catch (Exception ex)
+    var cs = Environment.GetEnvironmentVariable("SCHEDULING_DB_CS");
+    if (string.IsNullOrWhiteSpace(cs))
+        throw new InvalidOperationException("The SCHEDULING_DB_CS environment variable is not set.");
+
+    options.UseSqlServer(cs);
+});
+
+builder.Services.AddScoped<StudentAvailabilityRepository>();
+builder.Services.AddScoped<StudentAvailabilityService>();
+
+builder.Services.AddSingleton<IMapper>(_ =>
 {
-    Console.WriteLine($"Database connection failed: {ex.Message}");
-}
+    var config = new MapperConfiguration(
+        cfg => cfg.AddProfile<StudentAvailabilityProfile>(),
+        NullLoggerFactory.Instance);
+    config.AssertConfigurationIsValid();
+    return config.CreateMapper();
+});
+
+var app = builder.Build();
+
+app.MapControllers();
+
+app.Run();

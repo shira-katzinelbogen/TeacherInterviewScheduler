@@ -18,8 +18,11 @@ public class InterviewSlotsRepository : IRepository<InterviewSlots>
         _db = db;
     }
 
-    public Task<InterviewSlots?> GetByIdAsync(long id) =>
-        _db.InterviewSlots.FindAsync(id).AsTask();
+    public async Task<InterviewSlots?> GetByIdAsync(long id)
+    {
+        return await _db.InterviewSlots
+            .FirstOrDefaultAsync(s => s.InterviewSlotID == id);
+    }
 
     public async Task<IReadOnlyList<InterviewSlots>> GetAllAsync() =>
         await _db.InterviewSlots.ToListAsync();

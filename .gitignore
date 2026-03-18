@@ -1,6 +1,8 @@
 # Build
 bin/
 obj/
+**/bin/
+**/obj/
 
 # IDE
 .vs/
