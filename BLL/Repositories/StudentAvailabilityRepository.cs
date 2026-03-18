@@ -19,10 +19,7 @@ public class StudentAvailabilityRepository : IRepository<StudentAvailability>
         _db = db;
     }
 
-<<<<<<< HEAD
-=======
     /// <inheritdoc />
->>>>>>> 22bf93010b42e0fabde7a0681a25b2fb84fdeb6b
     public Task<StudentAvailability?> GetByIdAsync(long id) =>
         _db.StudentAvailabilities.FindAsync(id).AsTask();
 

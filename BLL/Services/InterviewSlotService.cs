@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using SchedulingService.DTOs;
 using SchedulingService.BLL.Repositories;
 using SchedulingService.Enums;
@@ -93,7 +94,7 @@ public class InterviewSlotService
     /// Rearrange slots for a specific student.
     /// Currently ensures that the student's scheduled interviews are aligned with the earliest available slots.
     /// </summary>
-    public async Task RearrangeSlotsAsync(long studentId)
+    public Task RearrangeSlotsAsync(long studentId)
     {
         // Load all scheduled interviews for the student along with their slots.
         var scheduledForStudent = _scheduledInterviewRepository.Query()
@@ -102,7 +103,7 @@ public class InterviewSlotService
 
         if (!scheduledForStudent.Any())
         {
-            return;
+            return Task.CompletedTask;
         }
 
         // Order by slot start time to ensure a consistent chronological order.
@@ -116,6 +117,8 @@ public class InterviewSlotService
         {
             _scheduledInterviewRepository.Update(item);
         }
+
+        return Task.CompletedTask;
     }
 
     /// <summary>
