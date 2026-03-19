@@ -120,7 +120,7 @@ public class InterviewSlotService
     private async Task RearrangeSlotsInternalAsync(long studentId)
     {
         // Load scheduled interviews including slots (repository method ensures Include).
-        var scheduledForStudent = (await _scheduledInterviewRepository.GetByStudentIdAsync(checked((int)studentId)))
+        var scheduledForStudent = (await _scheduledInterviewRepository.GetByStudentIdAsync(studentId))
             .ToList();
 
         if (scheduledForStudent.Count == 0)

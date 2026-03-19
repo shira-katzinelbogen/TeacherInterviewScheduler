@@ -21,11 +21,12 @@ public class ScheduledInterviewsRepository : IRepository<ScheduledInterview>
     /// <summary>
     /// Gets a scheduled interview by its primary key id (including the related interview slot).
     /// </summary>
-    public async Task<ScheduledInterview?> GetByIdAsync(int id)
+    public async Task<ScheduledInterview?> GetByIdAsync(long id)
     {
         if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
 
         return await _db.ScheduledInterviews
+            .AsNoTracking()
             .Include(si => si.InterviewSlot)
             .FirstOrDefaultAsync(si => si.Id == id);
     }
@@ -33,11 +34,12 @@ public class ScheduledInterviewsRepository : IRepository<ScheduledInterview>
     /// <summary>
     /// Gets the scheduled interview assigned to the specified interview slot id (including the related interview slot).
     /// </summary>
-    public async Task<ScheduledInterview?> GetBySlotIdAsync(int slotId)
+    public async Task<ScheduledInterview?> GetBySlotIdAsync(long slotId)
     {
         if (slotId <= 0) throw new ArgumentOutOfRangeException(nameof(slotId));
 
         return await _db.ScheduledInterviews
+            .AsNoTracking()
             .Include(si => si.InterviewSlot)
             .FirstOrDefaultAsync(si => si.InterviewSlotID == slotId);
     }
@@ -45,11 +47,12 @@ public class ScheduledInterviewsRepository : IRepository<ScheduledInterview>
     /// <summary>
     /// Gets all scheduled interviews for the specified student id (including related interview slots).
     /// </summary>
-    public async Task<IEnumerable<ScheduledInterview>> GetByStudentIdAsync(int studentId)
+    public async Task<IEnumerable<ScheduledInterview>> GetByStudentIdAsync(long studentId)
     {
         if (studentId <= 0) throw new ArgumentOutOfRangeException(nameof(studentId));
 
         return await _db.ScheduledInterviews
+            .AsNoTracking()
             .Include(si => si.InterviewSlot)
             .Where(si => si.StudentId == studentId)
             .ToListAsync();
@@ -63,6 +66,7 @@ public class ScheduledInterviewsRepository : IRepository<ScheduledInterview>
         // No teacher context exists in this project yet (no TeacherId/claims access in BLL).
         // Return all scheduled interviews with their slot details.
         return await _db.ScheduledInterviews
+            .AsNoTracking()
             .Include(si => si.InterviewSlot)
             .OrderBy(si => si.InterviewSlot.TimeStart)
             .ToListAsync();
@@ -81,7 +85,7 @@ public class ScheduledInterviewsRepository : IRepository<ScheduledInterview>
     /// <summary>
     /// Updates the status (and comments) for an existing scheduled interview. Caller is responsible for saving changes.
     /// </summary>
-    public async Task UpdateStatusAsync(int id, string newStatus, string comments)
+    public async Task UpdateStatusAsync(long id, string newStatus, string comments)
     {
         if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
         if (string.IsNullOrWhiteSpace(newStatus)) throw new ArgumentException("Status is required.", nameof(newStatus));
@@ -100,7 +104,7 @@ public class ScheduledInterviewsRepository : IRepository<ScheduledInterview>
     /// <summary>
     /// Cancels a scheduled interview by setting its status to <see cref="InterviewStatus.Cancelled"/>. Caller is responsible for saving changes.
     /// </summary>
-    public async Task CancelInterviewAsync(int id)
+    public async Task CancelInterviewAsync(long id)
     {
         if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
 
@@ -115,7 +119,7 @@ public class ScheduledInterviewsRepository : IRepository<ScheduledInterview>
     /// <summary>
     /// Deletes a scheduled interview by id. Caller is responsible for saving changes.
     /// </summary>
-    public async Task DeleteAsync(int id)
+    public async Task DeleteAsync(long id)
     {
         if (id <= 0) throw new ArgumentOutOfRangeException(nameof(id));
 
@@ -127,10 +131,11 @@ public class ScheduledInterviewsRepository : IRepository<ScheduledInterview>
     }
 
     Task<ScheduledInterview?> IRepository<ScheduledInterview>.GetByIdAsync(long id) =>
-        GetByIdAsync(checked((int)id));
+        GetByIdAsync(id);
 
     async Task<IReadOnlyList<ScheduledInterview>> IRepository<ScheduledInterview>.GetAllAsync() =>
         await _db.ScheduledInterviews
+            .AsNoTracking()
             .Include(si => si.InterviewSlot)
             .OrderBy(si => si.InterviewSlot.TimeStart)
             .ToListAsync();
