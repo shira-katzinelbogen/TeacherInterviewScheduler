@@ -22,6 +22,9 @@ builder.Services.AddDbContext<SchedulingDbContext>(options =>
 builder.Services.AddScoped<StudentAvailabilityRepository>();
 builder.Services.AddScoped<StudentAvailabilityService>();
 builder.Services.AddScoped<ScheduledInterviewsRepository>();
+builder.Services.AddScoped<InterviewSlotsRepository>();
+builder.Services.AddScoped<InterviewSlotService>();
+builder.Services.AddScoped<ScheduleInterviewsService>();
 
 builder.Services.AddSingleton<IMapper>(_ =>
 {
@@ -29,8 +32,13 @@ builder.Services.AddSingleton<IMapper>(_ =>
         cfg =>
         {
             cfg.AddProfile<StudentAvailabilityProfile>();
+<<<<<<< HEAD
             cfg.AddProfile<SchedulingService.BLL.Mapping.StudentAvailabilityDtoProfile>();
             cfg.AddProfile<SchedulingService.BLL.Mapping.InterviewSlotsDtoProfile>();
+=======
+            cfg.AddProfile<InterviewSlotProfile>();
+            cfg.AddProfile<ScheduledInterviewProfile>();
+>>>>>>> 1608011e318a92c93e4bef87d09e1c1d2757635b
         },
         NullLoggerFactory.Instance);
     config.AssertConfigurationIsValid();

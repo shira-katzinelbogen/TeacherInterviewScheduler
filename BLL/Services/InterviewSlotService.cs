@@ -2,8 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+<<<<<<< HEAD
 using SchedulingService.DTOs.InterviewSlots;
+=======
+using SchedulingService.Data;
+using SchedulingService.DTOs;
+>>>>>>> 1608011e318a92c93e4bef87d09e1c1d2757635b
 using SchedulingService.BLL.Repositories;
 using SchedulingService.Enums;
 using SchedulingService.Models;
@@ -13,17 +19,23 @@ namespace SchedulingService.BLL.Services;
 public class InterviewSlotService
 {
     private readonly InterviewSlotsRepository _interviewSlotsRepository;
-    private readonly ScheduledInterviewRepository _scheduledInterviewRepository;
+    private readonly ScheduledInterviewsRepository _scheduledInterviewRepository;
     private readonly StudentAvailabilityRepository _studentAvailabilityRepository;
+    private readonly SchedulingDbContext _db;
+    private readonly IMapper _mapper;
 
     public InterviewSlotService(
         InterviewSlotsRepository interviewSlotsRepository,
-        ScheduledInterviewRepository scheduledInterviewRepository,
-        StudentAvailabilityRepository studentAvailabilityRepository)
+        ScheduledInterviewsRepository scheduledInterviewRepository,
+        StudentAvailabilityRepository studentAvailabilityRepository,
+        SchedulingDbContext db,
+        IMapper mapper)
     {
         _interviewSlotsRepository = interviewSlotsRepository;
         _scheduledInterviewRepository = scheduledInterviewRepository;
         _studentAvailabilityRepository = studentAvailabilityRepository;
+        _db = db;
+        _mapper = mapper;
     }
 
     /// <summary>
@@ -48,9 +60,10 @@ public class InterviewSlotService
     /// </summary>
     public async Task<InterviewSlots> CreateInterviewSlotsAsync(CreateInterviewSlotDto dto)
     {
-        var slot = dto.ToEntity(slotStatus: SlotStatus.Unassigned);
+        var slot = _mapper.Map<InterviewSlots>(dto);
 
         await _interviewSlotsRepository.CreateSingleSlotAsync(slot);
+        await _db.SaveChangesAsync();
         return slot;
     }
 
@@ -73,9 +86,10 @@ public class InterviewSlotService
             return null;
         }
 
-        dto.ApplyToEntity(slot);
+        _mapper.Map(dto, slot);
 
         await _interviewSlotsRepository.UpdateSlotAsync(slot);
+        await _db.SaveChangesAsync();
 
         await MergeOverlappingSlotsAsync(slot.JobID, slot.Place, slot.InterviewType);
 
@@ -87,7 +101,15 @@ public class InterviewSlotService
     /// </summary>
     public Task<bool> DeleteSlotAsync(long id)
     {
-        return _interviewSlotsRepository.DeleteSlotAsync(id);
+        return DeleteSlotInternalAsync(id);
+    }
+
+    private async Task<bool> DeleteSlotInternalAsync(long id)
+    {
+        var deleted = await _interviewSlotsRepository.DeleteSlotAsync(id);
+        if (!deleted) return false;
+        await _db.SaveChangesAsync();
+        return true;
     }
 
     /// <summary>
@@ -96,29 +118,26 @@ public class InterviewSlotService
     /// </summary>
     public Task RearrangeSlotsAsync(long studentId)
     {
-        // Load all scheduled interviews for the student along with their slots.
-        var scheduledForStudent = _scheduledInterviewRepository.Query()
-            .Where(si => si.StudentId == studentId)
+        return RearrangeSlotsInternalAsync(studentId);
+    }
+
+    private async Task RearrangeSlotsInternalAsync(long studentId)
+    {
+        // Load scheduled interviews including slots (repository method ensures Include).
+        var scheduledForStudent = (await _scheduledInterviewRepository.GetByStudentIdAsync(studentId))
             .ToList();
 
-        if (!scheduledForStudent.Any())
-        {
-            return Task.CompletedTask;
-        }
+        if (scheduledForStudent.Count == 0)
+            return;
 
-        // Order by slot start time to ensure a consistent chronological order.
-        var ordered = scheduledForStudent
-            .OrderBy(si => si.InterviewSlot.TimeStart)
+        // Currently no persisted "order" field exists; we only ensure this does not throw
+        // and provides a stable, deterministic ordering for any caller-side processing.
+        _ = scheduledForStudent
+            .Where(si => si.InterviewSlot is not null)
+            .OrderBy(si => si.InterviewSlot!.TimeStart)
             .ToList();
 
-        // The basic implementation keeps them ordered; any additional business rules
-        // (e.g. packing/reassigning to different slots) can be added here later.
-        foreach (var item in ordered)
-        {
-            _scheduledInterviewRepository.Update(item);
-        }
-
-        return Task.CompletedTask;
+        await Task.CompletedTask;
     }
 
     /// <summary>
@@ -197,6 +216,7 @@ public class InterviewSlotService
         }
 
         await _interviewSlotsRepository.AddRangeAsync(slots);
+        await _db.SaveChangesAsync();
         return slots;
     }
 
@@ -241,6 +261,7 @@ public class InterviewSlotService
 
         _interviewSlotsRepository.RemoveRange(slots);
         await _interviewSlotsRepository.AddRangeAsync(merged);
+        await _db.SaveChangesAsync();
     }
 }
 
