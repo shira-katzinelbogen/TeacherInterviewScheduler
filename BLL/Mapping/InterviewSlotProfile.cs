@@ -19,6 +19,14 @@ public sealed class InterviewSlotProfile : Profile
                 s.InterviewType,
                 SlotStatus.Unassigned));
 
+        CreateMap<InterviewSlots, InterviewSlotDto>()
+            .ForMember(
+                d => d.Id,
+                opt => opt.MapFrom(s => s.InterviewSlotID))
+            .ForMember(
+                d => d.JobId,
+                opt => opt.MapFrom(s => s.JobID));
+
         CreateMap<UpdateInterviewSlotDto, InterviewSlots>()
             .ForMember(d => d.InterviewSlotID, opt => opt.Ignore())
             .ForMember(
