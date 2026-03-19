@@ -2,7 +2,7 @@ using System;
 using SchedulingService.Enums;
 using SchedulingService.Models;
 
-namespace SchedulingService.DTOs;
+namespace SchedulingService.DTOs.InterviewSlots;
 
 public class CreateInterviewSlotDto
 {

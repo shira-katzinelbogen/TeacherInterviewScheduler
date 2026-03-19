@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using SchedulingService.DTOs;
+using SchedulingService.DTOs.InterviewSlots;
 using SchedulingService.BLL.Repositories;
 using SchedulingService.Enums;
 using SchedulingService.Models;

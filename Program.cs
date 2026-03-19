@@ -26,7 +26,12 @@ builder.Services.AddScoped<ScheduledInterviewsRepository>();
 builder.Services.AddSingleton<IMapper>(_ =>
 {
     var config = new MapperConfiguration(
-        cfg => cfg.AddProfile<StudentAvailabilityProfile>(),
+        cfg =>
+        {
+            cfg.AddProfile<StudentAvailabilityProfile>();
+            cfg.AddProfile<SchedulingService.BLL.Mapping.StudentAvailabilityDtoProfile>();
+            cfg.AddProfile<SchedulingService.BLL.Mapping.InterviewSlotsDtoProfile>();
+        },
         NullLoggerFactory.Instance);
     config.AssertConfigurationIsValid();
     return config.CreateMapper();

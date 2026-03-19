@@ -14,31 +14,3 @@ public class UpdateInterviewSlotDto
     public InterviewType InterviewType { get; set; }
     public SlotStatus SlotStatus { get; set; }
 }
-
-public static class UpdateInterviewSlotMappers
-{
-    public static UpdateInterviewSlotDto FromEntity(InterviewSlots entity)
-    {
-        return new UpdateInterviewSlotDto
-        {
-            Id = entity.InterviewSlotID,
-            JobId = entity.JobID,
-            TimeStart = entity.TimeStart,
-            TimeEnd = entity.TimeEnd,
-            Place = entity.Place,
-            InterviewType = entity.InterviewType,
-            SlotStatus = entity.SlotStatus
-        };
-    }
-
-    public static void ApplyToEntity(this UpdateInterviewSlotDto dto, InterviewSlots entity)
-    {
-        entity.JobID = dto.JobId;
-        entity.TimeStart = dto.TimeStart;
-        entity.TimeEnd = dto.TimeEnd;
-        entity.Place = dto.Place;
-        entity.InterviewType = dto.InterviewType;
-        entity.SlotStatus = dto.SlotStatus;
-    }
-}
-
