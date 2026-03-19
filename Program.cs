@@ -21,11 +21,20 @@ builder.Services.AddDbContext<SchedulingDbContext>(options =>
 
 builder.Services.AddScoped<StudentAvailabilityRepository>();
 builder.Services.AddScoped<StudentAvailabilityService>();
+builder.Services.AddScoped<ScheduledInterviewsRepository>();
+builder.Services.AddScoped<InterviewSlotsRepository>();
+builder.Services.AddScoped<InterviewSlotService>();
+builder.Services.AddScoped<ScheduleInterviewsService>();
 
 builder.Services.AddSingleton<IMapper>(_ =>
 {
     var config = new MapperConfiguration(
-        cfg => cfg.AddProfile<StudentAvailabilityProfile>(),
+        cfg =>
+        {
+            cfg.AddProfile<StudentAvailabilityProfile>();
+            cfg.AddProfile<InterviewSlotProfile>();
+            cfg.AddProfile<ScheduledInterviewProfile>();
+        },
         NullLoggerFactory.Instance);
     config.AssertConfigurationIsValid();
     return config.CreateMapper();
