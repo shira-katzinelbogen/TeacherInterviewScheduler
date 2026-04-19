@@ -25,7 +25,7 @@ builder.Services.AddScoped<ScheduledInterviewsRepository>();
 builder.Services.AddScoped<InterviewSlotsRepository>();
 builder.Services.AddScoped<InterviewSlotService>();
 builder.Services.AddScoped<ScheduleInterviewsService>();
-
+g
 builder.Services.AddSingleton<IMapper>(_ =>
 {
     var config = new MapperConfiguration(
