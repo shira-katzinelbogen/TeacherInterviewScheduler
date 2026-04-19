@@ -1,12 +1,35 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using SchedulingService.BLL.Repositories;
 using SchedulingService.BLL.Services;
+using SchedulingService.Clients;
 using SchedulingService.Data;
 using SchedulingService.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<ExternalServicesOptions>(
+    builder.Configuration.GetSection("ExternalServices"));
+
+builder.Services.AddHttpClient<IdentityClient>((sp, client) =>
+{
+    var options = sp.GetRequiredService<IOptions<ExternalServicesOptions>>().Value;
+    if (string.IsNullOrWhiteSpace(options.IdentityUrl))
+        throw new InvalidOperationException("ExternalServices:IdentityUrl configuration is required.");
+
+    client.BaseAddress = new Uri(options.IdentityUrl);
+});
+
+builder.Services.AddHttpClient<IJobsServiceClient, JobsServiceClient>((sp, client) =>
+{
+    var options = sp.GetRequiredService<IOptions<ExternalServicesOptions>>().Value;
+    if (string.IsNullOrWhiteSpace(options.IdentityUrl))
+        throw new InvalidOperationException("ExternalServices:IdentityUrl configuration is required.");
+
+    client.BaseAddress = new Uri(options.IdentityUrl);
+});
 
 builder.Services.AddControllers();
 
