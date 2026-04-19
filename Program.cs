@@ -25,10 +25,10 @@ builder.Services.AddHttpClient<IdentityClient>((sp, client) =>
 builder.Services.AddHttpClient<IJobsServiceClient, JobsServiceClient>((sp, client) =>
 {
     var options = sp.GetRequiredService<IOptions<ExternalServicesOptions>>().Value;
-    if (string.IsNullOrWhiteSpace(options.IdentityUrl))
-        throw new InvalidOperationException("ExternalServices:IdentityUrl configuration is required.");
+    if (string.IsNullOrWhiteSpace(options.JobsUrl))
+        throw new InvalidOperationException("ExternalServices:JobsUrl configuration is required.");
 
-    client.BaseAddress = new Uri(options.IdentityUrl);
+    client.BaseAddress = new Uri(options.JobsUrl);
 });
 
 builder.Services.AddControllers();
