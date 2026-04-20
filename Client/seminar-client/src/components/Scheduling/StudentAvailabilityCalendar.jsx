@@ -464,11 +464,13 @@ function SlotAvailabilityLineToggle({ available, onChange, dense, ariaLabel }) {
  *       }
  *     }
  * - onChange(nextValue)
+ * - onCommitDay?(dateKey, dayEntry): fired when the day's drawer is closed,
+ *   so callers can persist the day's edits. dayEntry matches the preferred value shape.
  * - minDate?: Date (e.g. new Date())
  *
  * Shabbat: civil Saturdays are disabled — availability cannot be set for those days.
  */
-export default function StudentAvailabilityCalendar({ value, onChange, minDate }) {
+export default function StudentAvailabilityCalendar({ value, onChange, onCommitDay, minDate }) {
   const theme = useTheme();
   const availabilityByDate = value || {};
   const [cursorMonth, setCursorMonth] = useState(() => startOfMonth(clampToTodayIfNeeded(new Date(), minDate)));
@@ -510,6 +512,16 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
     }
     setSelectedDateKey(key);
     setDrawerOpen(true);
+  }
+
+  function closeDrawerAndCommit() {
+    if (!drawerOpen) return;
+    setDrawerOpen(false);
+    try {
+      onCommitDay?.(selectedDateKey, selectedDayEntry);
+    } catch {
+      /* commit failures are surfaced by the caller's handler; never break UI close */
+    }
   }
 
   function setSelectedDayEntry(patch) {
@@ -1187,7 +1199,7 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
       <Drawer
         anchor="right"
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={closeDrawerAndCommit}
         PaperProps={{
           sx: {
             width: { xs: '100%', sm: 460 },
@@ -1220,7 +1232,7 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
               </Typography>
             </Stack>
 
-            <IconButton aria-label="סגירה" onClick={() => setDrawerOpen(false)} size="small" sx={btnSquareSx}>
+            <IconButton aria-label="סגירה" onClick={closeDrawerAndCommit} size="small" sx={btnSquareSx}>
               <CloseIcon />
             </IconButton>
           </Stack>
@@ -1576,7 +1588,7 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
               borderColor: 'divider',
             }}
           >
-            <Button variant="contained" onClick={() => setDrawerOpen(false)} sx={btnSquareSx}>
+            <Button variant="contained" onClick={closeDrawerAndCommit} sx={btnSquareSx}>
               סיום
             </Button>
           </Box>

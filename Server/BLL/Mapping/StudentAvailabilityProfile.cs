@@ -17,9 +17,19 @@ public sealed class StudentAvailabilityProfile : Profile
                 s.EndTime,
                 s.Status,
                 s.ReasonStudent ?? string.Empty,
-                AvailabilityReasonKind.Personal));
+                AvailabilityReasonKind.Personal))
+            .ForMember(d => d.Id, opt => opt.Ignore())
+            .ForMember(d => d.ReasonStatus, opt => opt.Ignore());
 
         CreateMap<UpdateStudentAvailabilityDto, StudentAvailability>()
+            .ConstructUsing(s => new StudentAvailability(
+                s.Id,
+                0,
+                s.StartTime ?? DateTime.MinValue,
+                s.EndTime ?? DateTime.MaxValue,
+                s.Status ?? default,
+                s.ReasonStudent ?? string.Empty,
+                AvailabilityReasonKind.Personal))
             .ForMember(d => d.StudentId, opt => opt.Ignore())
             .ForMember(d => d.ReasonStatus, opt => opt.Ignore())
             .ForMember(

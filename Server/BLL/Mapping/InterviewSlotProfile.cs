@@ -17,7 +17,9 @@ public sealed class InterviewSlotProfile : Profile
                 s.TimeEnd,
                 s.Place ?? string.Empty,
                 s.InterviewType,
-                SlotStatus.Unassigned));
+                SlotStatus.Unassigned))
+            .ForMember(d => d.InterviewSlotID, opt => opt.Ignore())
+            .ForMember(d => d.SlotStatus, opt => opt.Ignore());
 
         CreateMap<InterviewSlots, InterviewSlotDto>()
             .ForMember(
@@ -28,6 +30,14 @@ public sealed class InterviewSlotProfile : Profile
                 opt => opt.MapFrom(s => s.JobID));
 
         CreateMap<UpdateInterviewSlotDto, InterviewSlots>()
+            .ConstructUsing(s => new InterviewSlots(
+                s.Id,
+                s.JobId,
+                s.TimeStart,
+                s.TimeEnd,
+                s.Place ?? string.Empty,
+                s.InterviewType,
+                s.SlotStatus))
             .ForMember(d => d.InterviewSlotID, opt => opt.Ignore())
             .ForMember(
                 d => d.Place,
