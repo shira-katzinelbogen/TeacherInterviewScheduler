@@ -25,6 +25,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { HDate, gematriya, getSedra } from '@hebcal/core';
 
 /** Square-first UI: only subtle corners, no pills or circles */
 const SQ = 4;
@@ -125,6 +126,156 @@ function formatHebrewMonthYear(date) {
   }
 }
 
+/** Day-of-month as Hebrew letter numerals (e.g. ג׳, י״ד, כ״א), not Arabic digits. */
+function hebrewCalendarDayLetters(dayNum) {
+  const ones = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
+  if (!Number.isFinite(dayNum) || dayNum < 1 || dayNum > 30) return '';
+  if (dayNum <= 10) {
+    return dayNum === 10 ? 'י׳' : `${ones[dayNum]}׳`;
+  }
+  if (dayNum === 15) return 'ט״ו';
+  if (dayNum === 16) return 'ט״ז';
+  if (dayNum < 20) {
+    return `י״${ones[dayNum - 10]}`;
+  }
+  if (dayNum === 20) return 'כ׳';
+  if (dayNum < 30) {
+    return `כ״${ones[dayNum - 20]}`;
+  }
+  return 'ל׳';
+}
+
+function getHebrewCalendarParts(date) {
+  try {
+    const dtf = new Intl.DateTimeFormat('he-IL', {
+      calendar: 'hebrew',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+    const parts = dtf.formatToParts(date);
+    let dayNum = null;
+    let month = '';
+    let hyear = null;
+    for (const p of parts) {
+      if (p.type === 'day') dayNum = parseInt(p.value, 10);
+      if (p.type === 'month') month = p.value;
+      if (p.type === 'year') {
+        const digits = p.value.replace(/[^\d]/g, '');
+        if (digits) hyear = parseInt(digits, 10);
+      }
+    }
+    return { dayNum, month, hyear };
+  } catch {
+    return { dayNum: null, month: '', hyear: null };
+  }
+}
+
+/** Hebrew (lunisolar) calendar — day as letters + month name (e.g. ג׳ אייר). */
+function formatHebrewCalendarDate(date) {
+  const { dayNum, month } = getHebrewCalendarParts(date);
+  if (dayNum == null || !month) return '';
+  const letters = hebrewCalendarDayLetters(dayNum);
+  if (!letters) return month;
+  return `${letters} ${month}`;
+}
+
+/** Same as above plus Hebrew year as letters (via gematriya). */
+function formatHebrewCalendarDateWithYear(date) {
+  const { dayNum, month, hyear } = getHebrewCalendarParts(date);
+  if (dayNum == null || !month) return '';
+  const dLetters = hebrewCalendarDayLetters(dayNum);
+  const yLetters = hyear != null && hyear > 0 ? gematriya(hyear) : '';
+  if (!dLetters) return [month, yLetters].filter(Boolean).join(' ');
+  return [dLetters, month, yLetters].filter(Boolean).join(' ');
+}
+
+/** English keys from @hebcal/core sedra — Hebrew labels for UI. */
+const PARSHA_EN_TO_HE = {
+  Bereshit: 'בראשית',
+  Noach: 'נח',
+  'Lech-Lecha': 'לך־לך',
+  Vayera: 'וירא',
+  'Chayei Sara': 'חיי שרה',
+  Toldot: 'תולדות',
+  Vayetzei: 'ויצא',
+  Vayishlach: 'וישלח',
+  Vayeshev: 'וישב',
+  Miketz: 'מקץ',
+  Vayigash: 'ויגש',
+  Vayechi: 'ויחי',
+  Shemot: 'שמות',
+  Vaera: 'וארא',
+  Bo: 'בא',
+  Beshalach: 'בשלח',
+  Yitro: 'יתרו',
+  Mishpatim: 'משפטים',
+  Terumah: 'תרומה',
+  Tetzaveh: 'תצוה',
+  'Ki Tisa': 'כי תשא',
+  Vayakhel: 'ויקהל',
+  Pekudei: 'פקודי',
+  Vayikra: 'ויקרא',
+  Tzav: 'צו',
+  Shmini: 'שמיני',
+  Tazria: 'תזריע',
+  Metzora: 'מצורע',
+  'Achrei Mot': 'אחרי מות',
+  Kedoshim: 'קדושים',
+  Emor: 'אמור',
+  Behar: 'בהר',
+  Bechukotai: 'בחוקתי',
+  Bamidbar: 'במדבר',
+  Nasso: 'נשא',
+  "Beha'alotcha": 'בהעלותך',
+  "Sh'lach": 'שלח לך',
+  Korach: 'קרח',
+  Chukat: 'חוקת',
+  Balak: 'בלק',
+  Pinchas: 'פינחס',
+  Matot: 'מטות',
+  Masei: 'מסעי',
+  Devarim: 'דברים',
+  Vaetchanan: 'ואתחנן',
+  Eikev: 'עקב',
+  "Re'eh": 'ראה',
+  Shoftim: 'שופטים',
+  'Ki Teitzei': 'כי תצא',
+  'Ki Tavo': 'כי תבוא',
+  Nitzavim: 'נצבים',
+  Vayeilech: 'וילך',
+  "Ha'azinu": 'האזינו',
+  'Vezot Haberakhah': 'וזאת הברכה',
+  'Rosh Hashana': 'ראש השנה',
+  'Yom Kippur': 'יום כיפור',
+  Sukkot: 'סוכות',
+  'Sukkot Shabbat Chol ha-Moed': 'שבת חול המועד סוכות',
+  'Shmini Atzeret': 'שמיני עצרת',
+  Pesach: 'פסח',
+  'Pesach I': 'פסח א׳',
+  'Pesach Shabbat Chol ha-Moed': 'שבת חול המועד פסח',
+  'Pesach VII': 'שביעי של פסח',
+  'Pesach VIII': 'אחרון של פסח',
+  Shavuot: 'שבועות',
+};
+
+function formatParshatHashavua(date) {
+  try {
+    const hd = new HDate(date);
+    const sedra = getSedra(hd.getFullYear(), true);
+    const r = sedra.lookup(hd);
+    const he = r.parsha.map((en) => PARSHA_EN_TO_HE[en] ?? en);
+    return `פרשת ${he.join('־')}`;
+  } catch {
+    return '';
+  }
+}
+
+/** Local civil Saturday (week starts Sunday=0) — treated as Shabbat for day-level scheduling. */
+function isShabbatDate(date) {
+  return date.getDay() === 6;
+}
+
 function weekdayHeadersHe() {
   return ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
 }
@@ -223,16 +374,27 @@ function defaultSlotForDateKey(isoDateKey) {
 
 function dayAriaLabel(date, summary, disabled) {
   const day = formatHebrewLongDate(date);
+  const hebrewCal = formatHebrewCalendarDate(date);
+  const calPart = hebrewCal ? `, ${hebrewCal}` : '';
   const extra = summary?.text ? `, ${summary.text}` : '';
+  if (disabled && isShabbatDate(date)) {
+    const parsha = formatParshatHashavua(date);
+    return `${day}${calPart}${extra}${parsha ? `, ${parsha}` : ''}`;
+  }
   const state = disabled ? ', לא ניתן לעריכה' : '';
-  return `${day}${extra}${state}`;
+  return `${day}${calPart}${extra}${state}`;
 }
 
-function getDayDisabled(date, minDate) {
+function isBeforeMinDate(date, minDate) {
   if (!minDate) return false;
   const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const minStart = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate());
   return dayStart < minStart;
+}
+
+function getDayDisabled(date, minDate) {
+  if (isShabbatDate(date)) return true;
+  return isBeforeMinDate(date, minDate);
 }
 
 /** MUI Switch: neutral gray track (no green); gentle contrast on / off */
@@ -303,6 +465,8 @@ function SlotAvailabilityLineToggle({ available, onChange, dense, ariaLabel }) {
  *     }
  * - onChange(nextValue)
  * - minDate?: Date (e.g. new Date())
+ *
+ * Shabbat: civil Saturdays are disabled — availability cannot be set for those days.
  */
 export default function StudentAvailabilityCalendar({ value, onChange, minDate }) {
   const theme = useTheme();
@@ -337,6 +501,7 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
   }, [cursorMonth]);
 
   function openDay(date) {
+    if (isShabbatDate(date)) return;
     const key = toIsoDateKey(date);
     if (minDate) {
       const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -477,6 +642,7 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
 
     for (let day = 1; day <= dim; day += 1) {
       const date = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
+      if (isShabbatDate(date)) continue;
       if (minDate) {
         const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
         const minStart = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate());
@@ -731,6 +897,22 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
                   יש חריגות לשעות
                 </Typography>
               </Stack>
+              <Stack direction="row" spacing={1.25} alignItems="center" sx={{ justifyContent: 'flex-start' }}>
+                <Box
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: `${SQ}px`,
+                    bgcolor: alpha(theme.palette.text.primary, theme.palette.mode === 'dark' ? 0.2 : 0.12),
+                    flexShrink: 0,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                />
+                <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500, lineHeight: 1.35 }}>
+                  שבת — פרשת השבוע
+                </Typography>
+              </Stack>
             </Stack>
           </Box>
         </Paper>
@@ -791,6 +973,8 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
               const exceptionsCount = entry.slots.length;
 
               const disabled = getDayDisabled(date, minDate);
+              const isShabbat = isShabbatDate(date);
+              const hebrewCalLine = formatHebrewCalendarDate(date);
               const isSelected = drawerOpen && key === selectedDateKey;
               const isToday = key === todayKey;
 
@@ -822,11 +1006,13 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
                     border: '1px solid',
                     borderColor: isSelected
                       ? 'primary.main'
-                      : isDayUnavailable
-                        ? alpha(theme.palette.error.main, theme.palette.mode === 'dark' ? 0.32 : 0.22)
-                        : hasExceptions
-                          ? alpha(theme.palette.info.main, theme.palette.mode === 'dark' ? 0.32 : 0.22)
-                          : 'divider',
+                      : isShabbat
+                        ? 'divider'
+                        : isDayUnavailable
+                          ? alpha(theme.palette.error.main, theme.palette.mode === 'dark' ? 0.32 : 0.22)
+                          : hasExceptions
+                            ? alpha(theme.palette.info.main, theme.palette.mode === 'dark' ? 0.32 : 0.22)
+                            : 'divider',
                     bgcolor: disabled
                       ? 'background.paper'
                       : isSelected
@@ -864,59 +1050,132 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
                     },
                     '&.Mui-disabled': {
                       bgcolor: 'background.paper',
-                      opacity: 0.5,
+                      // Shabbat stays fully legible; other disabled days (e.g. before min) stay muted
+                      opacity: isShabbat ? 1 : 0.5,
+                      ...(isShabbat
+                        ? {
+                            color: 'text.primary',
+                            WebkitTextFillColor: 'currentcolor',
+                          }
+                        : {}),
                     },
                   }}
                 >
                   <Stack spacing={0.75} sx={{ width: '100%' }}>
-                    <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={1}>
-                      <Stack spacing={0.25}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-                          {date.getDate()}
+                    {isShabbat ? (
+                      <>
+                        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={1}>
+                          <Stack spacing={0.25}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                              {date.getDate()}
+                            </Typography>
+                            {hebrewCalLine ? (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ lineHeight: 1.15, fontSize: '0.72rem', display: '-webkit-box', overflow: 'hidden', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
+                              >
+                                {hebrewCalLine}
+                              </Typography>
+                            ) : null}
+                            {isToday ? (
+                              <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1 }}>
+                                היום
+                              </Typography>
+                            ) : null}
+                          </Stack>
+                          <Box
+                            sx={{
+                              px: 1,
+                              py: 0.25,
+                              borderRadius: `${SQ}px`,
+                              bgcolor: alpha(theme.palette.text.primary, theme.palette.mode === 'dark' ? 0.12 : 0.08),
+                              border: '1px solid',
+                              borderColor: 'divider',
+                              alignSelf: 'flex-start',
+                            }}
+                          >
+                            <Typography variant="caption" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                              שבת
+                            </Typography>
+                          </Box>
+                        </Stack>
+                        <Typography
+                          variant="caption"
+                          color="text.primary"
+                          sx={{
+                            lineHeight: 1.25,
+                            fontWeight: 700,
+                            display: '-webkit-box',
+                            overflow: 'hidden',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                          }}
+                        >
+                          {formatParshatHashavua(date) || 'פרשת השבוע'}
                         </Typography>
-                        {isToday ? (
-                          <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1 }}>
-                            היום
+                      </>
+                    ) : (
+                      <>
+                        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={1}>
+                          <Stack spacing={0.25}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                              {date.getDate()}
+                            </Typography>
+                            {hebrewCalLine ? (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ lineHeight: 1.15, fontSize: '0.72rem', display: '-webkit-box', overflow: 'hidden', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
+                              >
+                                {hebrewCalLine}
+                              </Typography>
+                            ) : null}
+                            {isToday ? (
+                              <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1 }}>
+                                היום
+                              </Typography>
+                            ) : null}
+                          </Stack>
+
+                          <Box
+                            sx={{
+                              px: 1,
+                              py: 0.25,
+                              borderRadius: `${SQ}px`,
+                              bgcolor: statusTint,
+                              border: '1px solid',
+                              borderColor: alpha(statusColor, theme.palette.mode === 'dark' ? 0.35 : 0.28),
+                              alignSelf: 'flex-start',
+                            }}
+                          >
+                            <Typography variant="caption" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                              {dayStatus === AvailabilityStatus.Unavailable ? 'לא זמין/ה' : 'זמינה'}
+                            </Typography>
+                          </Box>
+                        </Stack>
+
+                        {hasExceptions ? (
+                          <Chip
+                            size="small"
+                            color="info"
+                            variant="outlined"
+                            label={exceptionsCount === 1 ? 'חריגה אחת לשעות' : `${exceptionsCount} חריגות לשעות`}
+                            sx={{ ...chipSquareSx, alignSelf: 'flex-start', fontWeight: 600, maxWidth: '100%' }}
+                          />
+                        ) : (
+                          <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.25, fontWeight: 500 }}>
+                            ללא חריגות
+                          </Typography>
+                        )}
+
+                        {summary ? (
+                          <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.25, display: '-webkit-box', overflow: 'hidden', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                            {summary.text}
                           </Typography>
                         ) : null}
-                      </Stack>
-
-                      <Box
-                        sx={{
-                          px: 1,
-                          py: 0.25,
-                          borderRadius: `${SQ}px`,
-                          bgcolor: statusTint,
-                          border: '1px solid',
-                          borderColor: alpha(statusColor, theme.palette.mode === 'dark' ? 0.35 : 0.28),
-                          alignSelf: 'flex-start',
-                        }}
-                      >
-                        <Typography variant="caption" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-                          {dayStatus === AvailabilityStatus.Unavailable ? 'לא זמין/ה' : 'זמינה'}
-                        </Typography>
-                      </Box>
-                    </Stack>
-
-                    {hasExceptions ? (
-                      <Chip
-                        size="small"
-                        color="info"
-                        variant="outlined"
-                        label={exceptionsCount === 1 ? 'חריגה אחת לשעות' : `${exceptionsCount} חריגות לשעות`}
-                        sx={{ ...chipSquareSx, alignSelf: 'flex-start', fontWeight: 600, maxWidth: '100%' }}
-                      />
-                    ) : (
-                      <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.25, fontWeight: 500 }}>
-                        ללא חריגות
-                      </Typography>
+                      </>
                     )}
-
-                    {summary ? (
-                      <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.25, display: '-webkit-box', overflow: 'hidden', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                        {summary.text}
-                      </Typography>
-                    ) : null}
                   </Stack>
                 </Button>
               );
@@ -951,6 +1210,11 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
               <Typography variant="h6" component="p">
                 {formatHebrewLongDate(selectedDate)}
               </Typography>
+              {formatHebrewCalendarDateWithYear(selectedDate) ? (
+                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  {formatHebrewCalendarDateWithYear(selectedDate)}
+                </Typography>
+              ) : null}
               <Typography variant="body2" color="text.secondary">
                 בחרי מצב יום והוסיפי חריגות לשעות מיוחדות
               </Typography>
