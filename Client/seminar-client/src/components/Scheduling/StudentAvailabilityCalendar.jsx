@@ -251,6 +251,7 @@ function SlotAvailabilityLineToggle({ available, onChange, dense, ariaLabel }) {
         flexWrap: 'wrap',
         rowGap: 0.75,
         columnGap: 1.25,
+        direction: 'ltr',
       }}
     >
       <Typography variant="caption" color="text.secondary" sx={{ userSelect: 'none', fontWeight: 500, minWidth: 'fit-content' }}>
@@ -370,11 +371,27 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
   const [newStart, setNewStart] = useState(defaultSlot().start);
   const [newEnd, setNewEnd] = useState(defaultSlot().end);
   const [newIsAvailable, setNewIsAvailable] = useState(true);
+  const [newReasonStudent, setNewReasonStudent] = useState('');
+  const [newReasonStatus, setNewReasonStatus] = useState(AvailabilityReasonKind.Personal);
 
   useEffect(() => {
     if (!drawerOpen) return;
     setNewIsAvailable(selectedDayStatus === AvailabilityStatus.Unavailable);
   }, [selectedDayStatus, selectedDateKey, drawerOpen]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    setNewReasonStudent('');
+    setNewReasonStatus(AvailabilityReasonKind.Personal);
+  }, [selectedDateKey, drawerOpen]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    if (newIsAvailable) {
+      setNewReasonStudent('');
+      setNewReasonStatus(AvailabilityReasonKind.Personal);
+    }
+  }, [newIsAvailable, drawerOpen]);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -392,42 +409,40 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
     return '';
   }, [newStart, newEnd]);
 
+  function newSlotMetaFields() {
+    const status = newIsAvailable ? AvailabilityStatus.Available : AvailabilityStatus.Unavailable;
+    const reasonStatus = newIsAvailable ? AvailabilityReasonKind.Personal : newReasonStatus;
+    const reasonStudent =
+      !newIsAvailable && newReasonStatus === AvailabilityReasonKind.Personal ? newReasonStudent : '';
+    return { status, reasonStudent, reasonStatus };
+  }
+
   function commitAddNewSlot() {
     if (newSlotError) return;
     addSlot({
+      ...newSlotMetaFields(),
       start: normalizeTimeString(newStart),
       end: normalizeTimeString(newEnd),
-      status: newIsAvailable ? AvailabilityStatus.Available : AvailabilityStatus.Unavailable,
-      reasonStudent: '',
-      reasonStatus: AvailabilityReasonKind.Personal,
     });
   }
 
   function quickAdd(range) {
-    if (range === 'morning')
-      addSlot({
-        start: '09:00',
-        end: '12:00',
-        status: newIsAvailable ? AvailabilityStatus.Available : AvailabilityStatus.Unavailable,
-        reasonStudent: '',
-        reasonStatus: 0,
-      });
-    if (range === 'noon')
-      addSlot({
-        start: '12:00',
-        end: '15:00',
-        status: newIsAvailable ? AvailabilityStatus.Available : AvailabilityStatus.Unavailable,
-        reasonStudent: '',
-        reasonStatus: 0,
-      });
-    if (range === 'evening')
-      addSlot({
-        start: '15:00',
-        end: '18:00',
-        status: newIsAvailable ? AvailabilityStatus.Available : AvailabilityStatus.Unavailable,
-        reasonStudent: '',
-        reasonStatus: 0,
-      });
+    let start = '09:00';
+    let end = '12:00';
+    if (range === 'noon') {
+      start = '12:00';
+      end = '15:00';
+    } else if (range === 'evening') {
+      start = '15:00';
+      end = '18:00';
+    } else if (range !== 'morning') {
+      return;
+    }
+    addSlot({
+      ...newSlotMetaFields(),
+      start,
+      end,
+    });
   }
 
   function daySummary(date) {
@@ -878,7 +893,7 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
                         }}
                       >
                         <Typography variant="caption" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
-                          {dayStatus === AvailabilityStatus.Unavailable ? 'לא זמין/ה' : 'זמין/ה'}
+                          {dayStatus === AvailabilityStatus.Unavailable ? 'לא זמין/ה' : 'זמינה'}
                         </Typography>
                       </Box>
                     </Stack>
@@ -998,13 +1013,6 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
                     <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                       סיבה ליום
                     </Typography>
-                    <TextField
-                      label="סיבה (אופציונלי)"
-                      value={selectedDayReasonStudent}
-                      onChange={(e) => setSelectedDayEntry({ dayReasonStudent: e.target.value })}
-                      fullWidth
-                      sx={textFieldSquareSx}
-                    />
                     <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                       <Chip
                         clickable
@@ -1015,12 +1023,26 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
                       />
                       <Chip
                         clickable
-                        onClick={() => setSelectedDayEntry({ dayReasonStatus: AvailabilityReasonKind.Interview })}
+                        onClick={() =>
+                          setSelectedDayEntry({
+                            dayReasonStatus: AvailabilityReasonKind.Interview,
+                            dayReasonStudent: '',
+                          })
+                        }
                         variant={selectedDayReasonStatus === AvailabilityReasonKind.Interview ? 'filled' : 'outlined'}
                         label="ראיון"
                         sx={chipSquareSx}
                       />
                     </Stack>
+                    {selectedDayReasonStatus === AvailabilityReasonKind.Personal ? (
+                      <TextField
+                        label="סיבה (אופציונלי)"
+                        value={selectedDayReasonStudent}
+                        onChange={(e) => setSelectedDayEntry({ dayReasonStudent: e.target.value })}
+                        fullWidth
+                        sx={textFieldSquareSx}
+                      />
+                    ) : null}
                   </Stack>
                 </CardContent>
               </Card>
@@ -1043,6 +1065,39 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
                     onChange={setNewIsAvailable}
                     ariaLabel="סוג חריגה חדשה"
                   />
+
+                  {!newIsAvailable ? (
+                    <Stack spacing={1.25}>
+                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                        <Chip
+                          clickable
+                          onClick={() => setNewReasonStatus(AvailabilityReasonKind.Personal)}
+                          variant={newReasonStatus === AvailabilityReasonKind.Personal ? 'filled' : 'outlined'}
+                          label="פרטי"
+                          sx={chipSquareSx}
+                        />
+                        <Chip
+                          clickable
+                          onClick={() => {
+                            setNewReasonStatus(AvailabilityReasonKind.Interview);
+                            setNewReasonStudent('');
+                          }}
+                          variant={newReasonStatus === AvailabilityReasonKind.Interview ? 'filled' : 'outlined'}
+                          label="ראיון"
+                          sx={chipSquareSx}
+                        />
+                      </Stack>
+                      {newReasonStatus === AvailabilityReasonKind.Personal ? (
+                        <TextField
+                          label="סיבה (אופציונלי)"
+                          value={newReasonStudent}
+                          onChange={(e) => setNewReasonStudent(e.target.value)}
+                          fullWidth
+                          sx={textFieldSquareSx}
+                        />
+                      ) : null}
+                    </Stack>
+                  ) : null}
 
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                     <TextField
@@ -1203,14 +1258,6 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
                               <Box>
                                 <Divider sx={{ mb: 1.5 }} />
                                 <Stack spacing={1.25}>
-                                  <TextField
-                                    label="סיבה (אופציונלי)"
-                                    value={slot.reasonStudent || ''}
-                                    onChange={(e) => updateSlot(idx, { reasonStudent: e.target.value })}
-                                    fullWidth
-                                    sx={textFieldSquareSx}
-                                  />
-
                                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                                     <Chip
                                       clickable
@@ -1221,12 +1268,26 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
                                     />
                                     <Chip
                                       clickable
-                                      onClick={() => updateSlot(idx, { reasonStatus: AvailabilityReasonKind.Interview })}
+                                      onClick={() =>
+                                        updateSlot(idx, {
+                                          reasonStatus: AvailabilityReasonKind.Interview,
+                                          reasonStudent: '',
+                                        })
+                                      }
                                       variant={slot.reasonStatus === AvailabilityReasonKind.Interview ? 'filled' : 'outlined'}
                                       label="ראיון"
                                       sx={chipSquareSx}
                                     />
                                   </Stack>
+                                  {slot.reasonStatus === AvailabilityReasonKind.Personal ? (
+                                    <TextField
+                                      label="סיבה (אופציונלי)"
+                                      value={slot.reasonStudent || ''}
+                                      onChange={(e) => updateSlot(idx, { reasonStudent: e.target.value })}
+                                      fullWidth
+                                      sx={textFieldSquareSx}
+                                    />
+                                  ) : null}
                                 </Stack>
                               </Box>
                             ) : null}
