@@ -4,8 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using SchedulingService.Data;
-using SchedulingService.DTOs;
 using SchedulingService.BLL.Repositories;
 using SchedulingService.Enums;
 using SchedulingService.Models;
@@ -33,21 +31,6 @@ public class InterviewSlotService
         _db = db;
         _mapper = mapper;
     }
-
-    /// <summary>
-    /// Get a single interview slot by its identifier.
-    /// </summary>
-    /// <param name="id">The interview slot identifier.</param>
-    /// <returns>The interview slot if found; otherwise, null.</returns>
-    public Task<InterviewSlots?> GetByIdAsync(long id) =>
-        _interviewSlotsRepository.GetByIdAsync(id);
-
-    /// <summary>
-    /// Get all interview slots.
-    /// </summary>
-    /// <returns>A read-only list of all interview slots.</returns>
-    public Task<IReadOnlyList<InterviewSlots>> GetAllAsync() =>
-        _interviewSlotsRepository.GetAllAsync();
 
     /// <summary>
     /// Get slots for a job. When <paramref name="date"/> is provided, returns free (unassigned) slots

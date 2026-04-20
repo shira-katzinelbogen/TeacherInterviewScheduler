@@ -32,6 +32,9 @@ builder.Services.AddSingleton<IMapper>(_ =>
         cfg =>
         {
             cfg.AddProfile<StudentAvailabilityProfile>();
+            cfg.AddProfile<SchedulingService.BLL.Mapping.StudentAvailabilityDtoProfile>();
+            cfg.AddProfile<SchedulingService.BLL.Mapping.InterviewSlotsDtoProfile>();
+
             cfg.AddProfile<InterviewSlotProfile>();
             cfg.AddProfile<ScheduledInterviewProfile>();
         },

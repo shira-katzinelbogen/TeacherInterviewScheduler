@@ -5,7 +5,7 @@ using SchedulingService.DTOs.ScheduledInterviews;
 namespace SchedulingService.Controllers;
 
 [ApiController]
-[Route("api")]
+[Route("api/scheduled-interviews")]
 public sealed class ScheduledInterviewsController : ControllerBase
 {
     private readonly ScheduleInterviewsService _service;
@@ -15,8 +15,7 @@ public sealed class ScheduledInterviewsController : ControllerBase
         _service = service;
     }
 
-    // Authorized roles: Teacher
-    [HttpPost("scheduled-interviews")]
+    [HttpPost]
     public async Task<ActionResult<ScheduledInterviewDto>> Schedule([FromBody] ScheduleInterviewDto dto)
     {
         if (dto is null)
@@ -41,9 +40,7 @@ public sealed class ScheduledInterviewsController : ControllerBase
         }
     }
 
-    
-    // Authorized roles: Teacher, Student
-    [HttpGet("students/{studentId:long}/scheduled-interviews")]
+    [HttpGet("~/api/students/{studentId:long}/scheduled-interviews")]
     public async Task<ActionResult<List<ScheduledInterviewDto>>> GetForStudent([FromRoute] long studentId)
     {
         try
@@ -57,8 +54,7 @@ public sealed class ScheduledInterviewsController : ControllerBase
         }
     }
 
-    // Authorized roles: Teacher
-    [HttpGet("interview-slots/{slotId:long}/scheduled-interviews")]
+    [HttpGet("~/api/interview-slots/{slotId:long}/scheduled-interviews")]
     public async Task<ActionResult<List<ScheduledInterviewDto>>> GetForSlot([FromRoute] long slotId)
     {
         try
@@ -68,12 +64,11 @@ public sealed class ScheduledInterviewsController : ControllerBase
         }
         catch (ArgumentOutOfRangeException ex)
         {
-       	    return BadRequest(ex.Message);
+            return BadRequest(ex.Message);
         }
     }
 
-    // Authorized roles: Teacher
-    [HttpPost("scheduled-interviews/{scheduledInterviewId:long}/cancel")]
+    [HttpPost("{scheduledInterviewId:long}/cancel")]
     public async Task<IActionResult> Cancel(
         [FromRoute] long scheduledInterviewId,
         [FromBody] CancelScheduledInterviewRequest request)
@@ -95,8 +90,7 @@ public sealed class ScheduledInterviewsController : ControllerBase
         }
     }
 
-    // Authorized roles: Teacher
-    [HttpPost("scheduled-interviews/{scheduledInterviewId:long}/status")]
+    [HttpPost("{scheduledInterviewId:long}/status")]
     public async Task<IActionResult> UpdateStatus(
         [FromRoute] long scheduledInterviewId,
         [FromBody] UpdateInterviewStatusRequest request)
@@ -126,8 +120,7 @@ public sealed class ScheduledInterviewsController : ControllerBase
         }
     }
 
-    // Authorized roles: Teacher
-    [HttpGet("scheduled-interviews/available-students")]
+    [HttpGet("available-students")]
     public async Task<ActionResult<List<StudentWithAvailabilityDto>>> GetAvailableStudents(
         [FromQuery] DateTime start,
         [FromQuery] DateTime end) =>
