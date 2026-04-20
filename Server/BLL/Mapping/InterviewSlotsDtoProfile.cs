@@ -8,19 +8,19 @@ public sealed class InterviewSlotsDtoProfile : Profile
 {
     public InterviewSlotsDtoProfile()
     {
-        CreateMap<InterviewSlots, IntervieSlotsDTO>()
+        CreateMap<InterviewSlots, InterviewSlotsDTO>()
             .ForMember(d => d.InterviewSlotId, opt => opt.MapFrom(s => s.InterviewSlotID))
             .ForMember(d => d.JobId, opt => opt.MapFrom(s => s.JobID));
 
-        CreateMap<IntervieSlotsDTO, InterviewSlots>()
+        CreateMap<InterviewSlotsDTO, InterviewSlots>()
             .ConstructUsing(s => new InterviewSlots(
-                interviewSlotID: s.InterviewSlotId,
-                jobID: s.JobId,
-                timeStart: s.TimeStart,
-                timeEnd: s.TimeEnd,
-                place: s.Place ?? string.Empty,
-                interviewType: s.InterviewType,
-                slotStatus: s.SlotStatus));
+                s.InterviewSlotId,
+                s.JobId,
+                s.TimeStart,
+                s.TimeEnd,
+                s.Place ?? string.Empty,
+                s.InterviewType,
+                s.SlotStatus));
     }
 }
 

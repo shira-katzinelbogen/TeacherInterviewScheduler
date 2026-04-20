@@ -25,14 +25,14 @@ builder.Services.AddScoped<ScheduledInterviewsRepository>();
 builder.Services.AddScoped<InterviewSlotsRepository>();
 builder.Services.AddScoped<InterviewSlotService>();
 builder.Services.AddScoped<ScheduleInterviewsService>();
-g
+
 builder.Services.AddSingleton<IMapper>(_ =>
 {
     var config = new MapperConfiguration(
         cfg =>
         {
             cfg.AddProfile<StudentAvailabilityProfile>();
-            cfg.AddProfile<SchedulingService.BLL.Mapping.StudentAvailabilityDtoProfile>();
+            cfg.AddProfile<StudentAvailabilityProfile>();
             cfg.AddProfile<SchedulingService.BLL.Mapping.InterviewSlotsDtoProfile>();
 
             cfg.AddProfile<InterviewSlotProfile>();

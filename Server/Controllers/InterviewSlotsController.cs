@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SchedulingService.BLL.Services;
-using SchedulingService.DTOs;
+using SchedulingService.DTOs.InterviewSlots;
 using SchedulingService.Models;
 
 namespace SchedulingService.Controllers;
