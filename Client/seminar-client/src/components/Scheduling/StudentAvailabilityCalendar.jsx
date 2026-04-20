@@ -26,6 +26,19 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
+/** Square-first UI: only subtle corners, no pills or circles */
+const SQ = 4;
+
+const textFieldSquareSx = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: `${SQ}px`,
+  },
+};
+
+const chipSquareSx = { borderRadius: `${SQ}px` };
+
+const btnSquareSx = { borderRadius: `${SQ}px` };
+
 const AvailabilityStatus = {
   Available: 0,
   Unavailable: 1,
@@ -66,10 +79,32 @@ function daysInMonth(date) {
   return new Date(y, m + 1, 0).getDate();
 }
 
+/** Parses "H:mm", "HH:mm", or "HH:mm:ss" to minutes from midnight. */
+function parseTimeToMinutes(timeStr) {
+  if (timeStr == null) return NaN;
+  const s = typeof timeStr === 'string' ? timeStr.trim() : String(timeStr);
+  const m = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!m) return NaN;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (!Number.isFinite(h) || !Number.isFinite(min) || h > 23 || min > 59) return NaN;
+  return h * 60 + min;
+}
+
+function normalizeTimeString(timeStr) {
+  const mins = parseTimeToMinutes(timeStr);
+  if (!Number.isFinite(mins)) return '';
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${pad2(h)}:${pad2(m)}`;
+}
+
 function compareTime(a, b) {
-  // a/b: "HH:MM"
   if (!a || !b) return 0;
-  return a.localeCompare(b);
+  const ma = parseTimeToMinutes(a);
+  const mb = parseTimeToMinutes(b);
+  if (Number.isFinite(ma) && Number.isFinite(mb)) return ma - mb;
+  return String(a).localeCompare(String(b));
 }
 
 function formatHebrewLongDate(date) {
@@ -91,12 +126,10 @@ function formatHebrewMonthYear(date) {
 }
 
 function weekdayHeadersHe() {
-  // Sunday -> Saturday (he-IL)
   return ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
 }
 
 function getSundayBasedWeekdayIndex(date) {
-  // JS: 0=Sunday ... 6=Saturday
   return date.getDay();
 }
 
@@ -105,26 +138,41 @@ function clampToTodayIfNeeded(date, minDate) {
   return date < minDate ? minDate : date;
 }
 
+function pickSlotTime(raw, fallbacks) {
+  for (const key of fallbacks) {
+    const v = raw?.[key];
+    if (v != null && v !== '') return typeof v === 'string' ? v : String(v);
+  }
+  return '';
+}
+
 function normalizeSlots(slots) {
   const safe = Array.isArray(slots) ? slots : [];
   return safe
-    .filter((s) => s && typeof s.start === 'string' && typeof s.end === 'string')
-    .map((s) => ({
-      id: s.id ?? s.studentAvailabilityId ?? s.studentAvailabilityID ?? s.studentAvailabilityId ?? undefined,
-      start: s.start,
-      end: s.end,
-      status: Number.isFinite(s.status) ? s.status : AvailabilityStatus.Available,
-      reasonStudent: typeof s.reasonStudent === 'string' ? s.reasonStudent : '',
-      reasonStatus: Number.isFinite(s.reasonStatus) ? s.reasonStatus : AvailabilityReasonKind.Personal,
-    }))
+    .map((s) => {
+      if (!s || typeof s !== 'object') return null;
+      const startRaw = pickSlotTime(s, ['start', 'Start', 'startTime', 'StartTime', 'from', 'From']);
+      const endRaw = pickSlotTime(s, ['end', 'End', 'endTime', 'EndTime', 'to', 'To']);
+      const start = normalizeTimeString(startRaw);
+      const end = normalizeTimeString(endRaw);
+      if (!start || !end) return null;
+      const ms = parseTimeToMinutes(start);
+      const me = parseTimeToMinutes(end);
+      if (!Number.isFinite(ms) || !Number.isFinite(me) || me <= ms) return null;
+      return {
+        id: s.id ?? s.studentAvailabilityId ?? s.studentAvailabilityID ?? undefined,
+        start,
+        end,
+        status: Number.isFinite(s.status) ? s.status : AvailabilityStatus.Available,
+        reasonStudent: typeof s.reasonStudent === 'string' ? s.reasonStudent : '',
+        reasonStatus: Number.isFinite(s.reasonStatus) ? s.reasonStatus : AvailabilityReasonKind.Personal,
+      };
+    })
+    .filter(Boolean)
     .sort((a, b) => compareTime(a.start, b.start));
 }
 
 function normalizeDayEntry(entry) {
-  // Supported shapes:
-  // 1) { [dateKey]: Slot[] }  (legacy)
-  // 2) { [dateKey]: { dayStatus, dayReasonStudent, dayReasonStatus, slots } }
-  // Default UX: day is Available, and student adds "exceptions" as needed.
   if (Array.isArray(entry)) {
     return {
       dayStatus: AvailabilityStatus.Available,
@@ -148,6 +196,94 @@ function slotLabel(slot) {
 
 function defaultSlot() {
   return { start: '09:00', end: '10:00' };
+}
+
+/** When editing today's date, default new exception times from "now" (5-minute steps, same as time inputs). */
+function defaultSlotForDateKey(isoDateKey) {
+  const todayKey = toIsoDateKey(new Date());
+  if (isoDateKey !== todayKey) return defaultSlot();
+
+  const now = new Date();
+  const totalMin = now.getHours() * 60 + now.getMinutes();
+  const rounded = Math.floor(totalMin / 5) * 5;
+  const lastMin = 24 * 60 - 1;
+  let endMin = rounded + 60;
+  if (endMin > lastMin) endMin = lastMin;
+  if (endMin <= rounded) endMin = Math.min(lastMin, rounded + 5);
+
+  const sh = Math.floor(rounded / 60);
+  const sm = rounded % 60;
+  const eh = Math.floor(endMin / 60);
+  const em = endMin % 60;
+  return {
+    start: `${pad2(sh)}:${pad2(sm)}`,
+    end: `${pad2(eh)}:${pad2(em)}`,
+  };
+}
+
+function dayAriaLabel(date, summary, disabled) {
+  const day = formatHebrewLongDate(date);
+  const extra = summary?.text ? `, ${summary.text}` : '';
+  const state = disabled ? ', לא ניתן לעריכה' : '';
+  return `${day}${extra}${state}`;
+}
+
+function getDayDisabled(date, minDate) {
+  if (!minDate) return false;
+  const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const minStart = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate());
+  return dayStart < minStart;
+}
+
+/** MUI Switch: neutral gray track (no green); gentle contrast on / off */
+function SlotAvailabilityLineToggle({ available, onChange, dense, ariaLabel }) {
+  const theme = useTheme();
+  const trackOff = alpha(theme.palette.text.primary, theme.palette.mode === 'dark' ? 0.24 : 0.16);
+  const trackOn = alpha(theme.palette.text.primary, theme.palette.mode === 'dark' ? 0.42 : 0.34);
+
+  return (
+    <Stack
+      direction="row"
+      alignItems="center"
+      justifyContent="flex-start"
+      spacing={1.25}
+      sx={{
+        flexWrap: 'wrap',
+        rowGap: 0.75,
+        columnGap: 1.25,
+      }}
+    >
+      <Typography variant="caption" color="text.secondary" sx={{ userSelect: 'none', fontWeight: 500, minWidth: 'fit-content' }}>
+        לא זמין
+      </Typography>
+      <Switch
+        checked={available}
+        onChange={(e) => onChange(e.target.checked)}
+        size={dense ? 'small' : 'medium'}
+        inputProps={{ 'aria-label': ariaLabel }}
+        sx={{
+          mx: 0,
+          '& .MuiSwitch-track': {
+            borderRadius: `${SQ}px`,
+            opacity: 1,
+            backgroundColor: trackOff,
+          },
+          '& .MuiSwitch-switchBase': {
+            '&.Mui-checked': {
+              color: theme.palette.common.white,
+            },
+            '&.Mui-checked + .MuiSwitch-track': {
+              backgroundColor: trackOn,
+              opacity: 1,
+            },
+          },
+        }}
+      />
+      <Typography variant="caption" color="text.secondary" sx={{ userSelect: 'none', fontWeight: 500, minWidth: 'fit-content' }}>
+        זמין
+      </Typography>
+    </Stack>
+  );
 }
 
 /**
@@ -174,6 +310,7 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
   const [selectedDateKey, setSelectedDateKey] = useState(() => toIsoDateKey(clampToTodayIfNeeded(new Date(), minDate)));
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const todayKey = useMemo(() => toIsoDateKey(new Date()), []);
   const selectedDate = useMemo(() => parseIsoDateKey(selectedDateKey), [selectedDateKey]);
   const selectedDayEntry = useMemo(
     () => normalizeDayEntry(availabilityByDate[selectedDateKey]),
@@ -187,7 +324,7 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
   const monthGrid = useMemo(() => {
     const monthStart = startOfMonth(cursorMonth);
     const dim = daysInMonth(monthStart);
-    const offset = getSundayBasedWeekdayIndex(monthStart); // leading empty cells
+    const offset = getSundayBasedWeekdayIndex(monthStart);
     const cells = [];
     for (let i = 0; i < offset; i += 1) cells.push(null);
     for (let day = 1; day <= dim; day += 1) {
@@ -234,26 +371,32 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
   const [newEnd, setNewEnd] = useState(defaultSlot().end);
   const [newIsAvailable, setNewIsAvailable] = useState(true);
 
-  // When toggling whole-day status, make "add slot" default to the opposite (exceptions).
-  // Whole day Available -> add Unavailable exceptions (block hours).
-  // Whole day Unavailable -> add Available exceptions (allow an hour).
-  // We only auto-adjust when drawer opens or the selected date changes.
   useEffect(() => {
     if (!drawerOpen) return;
     setNewIsAvailable(selectedDayStatus === AvailabilityStatus.Unavailable);
   }, [selectedDayStatus, selectedDateKey, drawerOpen]);
 
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const d = defaultSlotForDateKey(selectedDateKey);
+    setNewStart(d.start);
+    setNewEnd(d.end);
+  }, [selectedDateKey, drawerOpen]);
+
   const newSlotError = useMemo(() => {
-    if (!newStart || !newEnd) return 'בחר/י שעה התחלה וסיום';
-    if (compareTime(newStart, newEnd) >= 0) return 'שעת סיום חייבת להיות אחרי שעת ההתחלה';
+    if (!newStart?.trim?.() || !newEnd?.trim?.()) return 'בחר/י שעה התחלה וסיום';
+    const ms = parseTimeToMinutes(newStart);
+    const me = parseTimeToMinutes(newEnd);
+    if (!Number.isFinite(ms) || !Number.isFinite(me)) return 'פורמט שעה לא תקין';
+    if (me <= ms) return 'שעת סיום חייבת להיות אחרי שעת ההתחלה';
     return '';
   }, [newStart, newEnd]);
 
   function commitAddNewSlot() {
     if (newSlotError) return;
     addSlot({
-      start: newStart,
-      end: newEnd,
+      start: normalizeTimeString(newStart),
+      end: normalizeTimeString(newEnd),
       status: newIsAvailable ? AvailabilityStatus.Available : AvailabilityStatus.Unavailable,
       reasonStudent: '',
       reasonStatus: AvailabilityReasonKind.Personal,
@@ -302,13 +445,13 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
       return { kind: 'some', text: `זמין · ${unavailableCount} חסומים` };
     }
 
-    // Whole day Unavailable
     if (slots.length === 0) return { kind: 'warn', text: 'לא זמין כל היום' };
     return { kind: 'some', text: `לא זמין · ${availableCount} זמינים` };
   }
 
   const headers = weekdayHeadersHe();
   const monthLabel = formatHebrewMonthYear(cursorMonth);
+  const cursorMonthKey = useMemo(() => toIsoDateKey(startOfMonth(cursorMonth)), [cursorMonth]);
 
   const monthStats = useMemo(() => {
     const monthStart = startOfMonth(cursorMonth);
@@ -334,481 +477,786 @@ export default function StudentAvailabilityCalendar({ value, onChange, minDate }
     return { totalDays, daysUnavailable, daysWithExceptions };
   }, [availabilityByDate, cursorMonth, minDate]);
 
+  const monthSummaryLabels = useMemo(
+    () => ({
+      editing:
+        monthStats.totalDays === 1 ? 'יום אחד זמין לעריכה' : `${monthStats.totalDays} ימים זמינים לעריכה`,
+      exceptions:
+        monthStats.daysWithExceptions === 1
+          ? 'יום אחד עם חריגות'
+          : `${monthStats.daysWithExceptions} ימים עם חריגות`,
+      unavailable:
+        monthStats.daysUnavailable === 1 ? 'יום אחד לא זמין' : `${monthStats.daysUnavailable} ימים לא זמינים`,
+    }),
+    [monthStats]
+  );
+
+  const subtleHeaderBg = alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.12 : 0.06);
+  const summaryPillRadius = '999px';
+  const summaryPanelRadius = '24px';
+  const summaryMutedFill = alpha(theme.palette.text.primary, theme.palette.mode === 'dark' ? 0.12 : 0.08);
+
   return (
-    <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={2} flexWrap="wrap">
-        <Stack spacing={0.5}>
-          <Typography variant="h5" component="h2" sx={{ fontWeight: 800 }}>
-            זמינות לראיונות
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            בחרו יום כדי לסמן זמינות יומית או להוסיף חריגות לשעות ספציפיות
-          </Typography>
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1}>
-          <Tooltip title="חודש קודם">
-            <IconButton aria-label="חודש קודם" onClick={() => setCursorMonth((m) => addMonths(m, -1))}>
-              <ChevronRightIcon />
-            </IconButton>
-          </Tooltip>
-
-          <Typography variant="body1" sx={{ fontWeight: 800 }}>
-            {monthLabel}
-          </Typography>
-
-          <Tooltip title="חודש הבא">
-            <IconButton aria-label="חודש הבא" onClick={() => setCursorMonth((m) => addMonths(m, 1))}>
-              <ChevronLeftIcon />
-            </IconButton>
-          </Tooltip>
-        </Stack>
-      </Stack>
-
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-        <Card variant="outlined" sx={{ flex: 1, borderRadius: 4 }}>
-          <CardContent sx={{ pb: 2.5 }}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
-              <Stack spacing={0.25}>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+    <Stack spacing={2}>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        spacing={2}
+        alignItems="stretch"
+        sx={{ width: '100%' }}
+      >
+        <Paper
+          elevation={0}
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            borderRadius: summaryPanelRadius,
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+          }}
+        >
+          <Box
+            sx={{
+              px: { xs: 2, sm: 2.5 },
+              py: 2,
+              bgcolor: subtleHeaderBg,
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
+            <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={2} flexWrap="wrap">
+              <Stack spacing={0.5} sx={{ textAlign: 'right', alignItems: 'flex-start' }}>
+                <Typography variant="body2" color="text.secondary">
                   סיכום לחודש
                 </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 800 }}>
+                <Typography variant="h5" component="p" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
                   {monthLabel}
                 </Typography>
               </Stack>
 
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Chip size="small" label={`${monthStats.totalDays} ימים זמינים לעריכה`} />
-                <Chip size="small" variant="outlined" label={`${monthStats.daysWithExceptions} ימים עם חריגות`} />
-                <Chip size="small" color="warning" variant="outlined" label={`${monthStats.daysUnavailable} ימים לא זמינים`} />
+              <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap" useFlexGap>
+                <Tooltip title="חודש קודם">
+                  <IconButton
+                    aria-label="חודש קודם"
+                    onClick={() => setCursorMonth((m) => addMonths(m, -1))}
+                    size="small"
+                    sx={btnSquareSx}
+                  >
+                    <ChevronRightIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="חודש הבא">
+                  <IconButton
+                    aria-label="חודש הבא"
+                    onClick={() => setCursorMonth((m) => addMonths(m, 1))}
+                    size="small"
+                    sx={btnSquareSx}
+                  >
+                    <ChevronLeftIcon />
+                  </IconButton>
+                </Tooltip>
+
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => {
+                    const next = startOfMonth(clampToTodayIfNeeded(new Date(), minDate));
+                    if (toIsoDateKey(next) === cursorMonthKey) return;
+                    setCursorMonth(next);
+                  }}
+                  sx={btnSquareSx}
+                >
+                  חזרה להיום
+                </Button>
               </Stack>
+            </Stack>
+          </Box>
+
+          <Box sx={{ px: { xs: 2, sm: 2.5 }, py: 2.5 }}>
+            <Stack direction="row" flexWrap="wrap" useFlexGap gap={1} sx={{ justifyContent: 'flex-start' }}>
+              <Chip
+                size="small"
+                label={monthSummaryLabels.editing}
+                sx={{
+                  ...chipSquareSx,
+                  borderRadius: summaryPillRadius,
+                  height: 32,
+                  bgcolor: summaryMutedFill,
+                  border: 'none',
+                  fontWeight: 600,
+                  '& .MuiChip-label': { px: 1.5 },
+                }}
+              />
+              <Chip
+                size="small"
+                variant="outlined"
+                label={monthSummaryLabels.exceptions}
+                sx={{
+                  ...chipSquareSx,
+                  borderRadius: summaryPillRadius,
+                  height: 32,
+                  fontWeight: 600,
+                  bgcolor: 'background.paper',
+                  '& .MuiChip-label': { px: 1.5 },
+                }}
+              />
+              <Chip
+                size="small"
+                variant="outlined"
+                label={monthSummaryLabels.unavailable}
+                sx={{
+                  ...chipSquareSx,
+                  borderRadius: summaryPillRadius,
+                  height: 32,
+                  fontWeight: 600,
+                  color: 'warning.main',
+                  borderColor: 'warning.main',
+                  bgcolor: 'background.paper',
+                  '& .MuiChip-label': { px: 1.5 },
+                }}
+              />
             </Stack>
 
             <Divider sx={{ my: 2 }} />
 
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <Chip size="small" label="טיפ: זמין כל היום ואז חוסמים שעות" />
-              <Chip size="small" variant="outlined" label="טיפ: לא זמין כל היום ואז מוסיפים שעות זמינות" />
+            <Stack direction="row" flexWrap="wrap" useFlexGap gap={1} sx={{ justifyContent: 'flex-end' }}>
+              <Chip
+                size="small"
+                label='טיפ: זמין כל היום ואז חוסמים שעות'
+                sx={{
+                  ...chipSquareSx,
+                  borderRadius: summaryPillRadius,
+                  height: 32,
+                  bgcolor: summaryMutedFill,
+                  border: 'none',
+                  fontWeight: 600,
+                  '& .MuiChip-label': { px: 1.5 },
+                }}
+              />
+              <Chip
+                size="small"
+                variant="outlined"
+                label='טיפ: לא זמין כל היום ואז מוסיפים שעות זמינות'
+                sx={{
+                  ...chipSquareSx,
+                  borderRadius: summaryPillRadius,
+                  height: 32,
+                  fontWeight: 600,
+                  bgcolor: 'background.paper',
+                  '& .MuiChip-label': { px: 1.5 },
+                }}
+              />
             </Stack>
-          </CardContent>
-        </Card>
+          </Box>
+        </Paper>
 
-        <Card
-          variant="outlined"
+        <Paper
+          elevation={0}
           sx={{
-            width: { xs: '100%', md: 340 },
-            borderRadius: 4,
+            width: { xs: '100%', md: 280 },
+            flexShrink: 0,
+            borderRadius: summaryPanelRadius,
+            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: 'divider',
             bgcolor: 'background.paper',
+            alignSelf: { xs: 'stretch', md: 'flex-start' },
           }}
         >
-          <CardContent sx={{ pb: 2.5 }}>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          <Box sx={{ px: 2, py: 2, borderBottom: '1px solid', borderColor: 'divider', bgcolor: subtleHeaderBg }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, textAlign: 'right' }}>
               מקרא
             </Typography>
-            <Stack spacing={1.25} sx={{ mt: 1.25 }}>
-              <Stack direction="row" alignItems="center" spacing={1}>
+          </Box>
+          <Box sx={{ px: 2, py: 2 }}>
+            <Stack spacing={1.75} sx={{ alignItems: 'stretch' }}>
+              <Stack direction="row" spacing={1.25} alignItems="center" sx={{ justifyContent: 'flex-start' }}>
                 <Box
                   sx={{
-                    width: 10,
-                    height: 10,
+                    width: 12,
+                    height: 12,
                     borderRadius: '50%',
                     bgcolor: 'success.main',
+                    flexShrink: 0,
+                    boxShadow: `0 0 0 1px ${alpha(theme.palette.success.main, 0.25)}`,
                   }}
                 />
-                <Typography variant="body2">זמין (או רוב היום זמין)</Typography>
+                <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500, lineHeight: 1.35 }}>
+                  זמין (או רוב היום זמין)
+                </Typography>
               </Stack>
-              <Stack direction="row" alignItems="center" spacing={1}>
+              <Stack direction="row" spacing={1.25} alignItems="center" sx={{ justifyContent: 'flex-start' }}>
                 <Box
                   sx={{
-                    width: 10,
-                    height: 10,
+                    width: 12,
+                    height: 12,
                     borderRadius: '50%',
                     bgcolor: 'warning.main',
+                    flexShrink: 0,
+                    boxShadow: `0 0 0 1px ${alpha(theme.palette.warning.main, 0.25)}`,
                   }}
                 />
-                <Typography variant="body2">לא זמין (או רוב היום לא זמין)</Typography>
+                <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500, lineHeight: 1.35 }}>
+                  לא זמין (או רוב היום לא זמין)
+                </Typography>
               </Stack>
-              <Stack direction="row" alignItems="center" spacing={1}>
+              <Stack direction="row" spacing={1.25} alignItems="center" sx={{ justifyContent: 'flex-start' }}>
                 <Box
                   sx={{
-                    width: 10,
-                    height: 10,
+                    width: 12,
+                    height: 12,
                     borderRadius: '50%',
                     bgcolor: 'info.main',
+                    flexShrink: 0,
+                    boxShadow: `0 0 0 1px ${alpha(theme.palette.info.main, 0.25)}`,
                   }}
                 />
-                <Typography variant="body2">יש חריגות לשעות</Typography>
+                <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500, lineHeight: 1.35 }}>
+                  יש חריגות לשעות
+                </Typography>
               </Stack>
             </Stack>
-          </CardContent>
-        </Card>
+          </Box>
+        </Paper>
       </Stack>
 
-      <Paper elevation={0} sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 4, bgcolor: 'background.paper' }}>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
-            gap: 1,
-          }}
-        >
-          {headers.map((h) => (
-            <Typography
-              key={h}
-              variant="body2"
-              sx={{ textAlign: 'center', color: 'text.secondary', fontWeight: 800, py: 0.5 }}
-            >
-              {h}
-            </Typography>
-          ))}
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: `${SQ}px`,
+          overflow: 'hidden',
+          border: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+        }}
+      >
+        <Box sx={{ px: { xs: 1.5, sm: 2 }, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'background.default' }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+              gap: 1,
+            }}
+          >
+            {headers.map((h) => (
+              <Typography key={h} variant="caption" color="text.secondary" sx={{ textAlign: 'center', fontWeight: 600 }}>
+                {h}
+              </Typography>
+            ))}
+          </Box>
+        </Box>
 
-          {monthGrid.map((date, idx) => {
-            if (!date) {
-              return <Box key={`empty-${idx}`} sx={{ height: { xs: 78, sm: 96 } }} />;
-            }
+        <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+              gap: { xs: 1, sm: 1.25 },
+            }}
+          >
+            {monthGrid.map((date, idx) => {
+              if (!date)
+                return (
+                  <Box
+                    key={`empty-${idx}`}
+                    sx={{
+                      aspectRatio: '1 / 1',
+                      minHeight: { xs: 72, sm: 88 },
+                      borderRadius: `${SQ}px`,
+                    }}
+                  />
+                );
 
-            const key = toIsoDateKey(date);
-            const isSelected = key === selectedDateKey && drawerOpen;
-            const isToday = key === toIsoDateKey(new Date());
-            const summary = daySummary(date);
-            const entry = normalizeDayEntry(availabilityByDate[key]);
+              const key = toIsoDateKey(date);
+              const entry = normalizeDayEntry(availabilityByDate[key]);
+              const dayStatus = entry.dayStatus;
+              const hasExceptions = entry.slots.length > 0;
+              const summary = daySummary(date);
+              const exceptionsCount = entry.slots.length;
 
-            let disabled = false;
-            if (minDate) {
-              const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-              const minStart = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate());
-              disabled = dayStart < minStart;
-            }
+              const disabled = getDayDisabled(date, minDate);
+              const isSelected = drawerOpen && key === selectedDateKey;
+              const isToday = key === todayKey;
 
-            const baseBorder = theme.palette.divider;
-            const hasExceptions = entry.slots.length > 0;
-            const dayStatus = entry.dayStatus;
-            const dotColor =
-              dayStatus === AvailabilityStatus.Unavailable ? theme.palette.warning.main : theme.palette.success.main;
+              const isDayUnavailable = dayStatus === AvailabilityStatus.Unavailable;
+              const statusColor = isDayUnavailable ? theme.palette.warning.main : theme.palette.success.main;
+              const statusTint = alpha(statusColor, theme.palette.mode === 'dark' ? 0.14 : 0.1);
+              const selectedOutline = alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.55 : 0.4);
+              const exceptionDayBg = alpha(theme.palette.info.main, theme.palette.mode === 'dark' ? 0.1 : 0.06);
+              const unavailableDayBg = alpha(theme.palette.error.main, theme.palette.mode === 'dark' ? 0.1 : 0.06);
+              const selectedDayBg = alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.14 : 0.08);
+              const exceptionHoverBg = alpha(theme.palette.info.main, theme.palette.mode === 'dark' ? 0.16 : 0.1);
+              const unavailableHoverBg = alpha(theme.palette.error.main, theme.palette.mode === 'dark' ? 0.16 : 0.1);
 
-            return (
-              <Box key={key} sx={{ position: 'relative' }}>
+              return (
                 <Button
+                  key={key}
                   onClick={() => openDay(date)}
                   disabled={disabled}
+                  aria-label={dayAriaLabel(date, summary, disabled)}
                   variant="text"
                   sx={{
-                    width: '100%',
-                    height: { xs: 78, sm: 96 },
-                    borderRadius: 3,
-                    alignItems: 'stretch',
+                    aspectRatio: '1 / 1',
+                    minHeight: { xs: 72, sm: 88 },
+                    borderRadius: `${SQ}px`,
                     p: 1.25,
                     textAlign: 'right',
                     justifyContent: 'flex-start',
-                    border: `1px solid ${baseBorder}`,
-                    bgcolor: isSelected ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.22 : 0.08) : 'transparent',
-                    boxShadow: isSelected ? 1 : 0,
-                    transition: 'transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease',
+                    alignItems: 'stretch',
+                    border: '1px solid',
+                    borderColor: isSelected
+                      ? 'primary.main'
+                      : isDayUnavailable
+                        ? alpha(theme.palette.error.main, theme.palette.mode === 'dark' ? 0.32 : 0.22)
+                        : hasExceptions
+                          ? alpha(theme.palette.info.main, theme.palette.mode === 'dark' ? 0.32 : 0.22)
+                          : 'divider',
+                    bgcolor: disabled
+                      ? 'background.paper'
+                      : isSelected
+                        ? selectedDayBg
+                        : isDayUnavailable
+                          ? unavailableDayBg
+                          : hasExceptions
+                            ? exceptionDayBg
+                            : 'background.paper',
+                    boxShadow: isSelected ? theme.shadows[1] : 'none',
+                    transition: (t) =>
+                      t.transitions.create(['background-color', 'box-shadow', 'border-color'], { duration: t.transitions.duration.short }),
                     '&:hover': {
-                      bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.18 : 0.06),
-                      boxShadow: 1,
-                      transform: disabled ? 'none' : 'translateY(-1px)',
+                      bgcolor: disabled
+                        ? 'background.paper'
+                        : isSelected
+                          ? selectedDayBg
+                          : isDayUnavailable
+                            ? unavailableHoverBg
+                            : hasExceptions
+                              ? exceptionHoverBg
+                              : 'action.hover',
+                      borderColor: isSelected
+                        ? 'primary.main'
+                        : isDayUnavailable
+                          ? alpha(theme.palette.error.main, 0.38)
+                          : hasExceptions
+                            ? alpha(theme.palette.info.main, 0.38)
+                            : 'divider',
+                      boxShadow: theme.shadows[1],
+                    },
+                    '&:focus-visible': {
+                      outline: `2px solid ${selectedOutline}`,
+                      outlineOffset: 2,
                     },
                     '&.Mui-disabled': {
-                      opacity: 0.45,
+                      bgcolor: 'background.paper',
+                      opacity: 0.5,
                     },
                   }}
                 >
                   <Stack spacing={0.75} sx={{ width: '100%' }}>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <Box
-                          sx={{
-                            width: 10,
-                            height: 10,
-                            borderRadius: '50%',
-                            bgcolor: dotColor,
-                            flex: '0 0 auto',
-                          }}
-                        />
-                        <Typography variant="body1" sx={{ fontWeight: 900 }}>
+                    <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={1}>
+                      <Stack spacing={0.25}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
                           {date.getDate()}
                         </Typography>
+                        {isToday ? (
+                          <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1 }}>
+                            היום
+                          </Typography>
+                        ) : null}
                       </Stack>
 
-                      <Stack direction="row" spacing={0.75} alignItems="center">
-                        {hasExceptions ? <Chip size="small" variant="outlined" label="חריגות" /> : null}
-                        {isToday ? <Chip size="small" label="היום" /> : null}
-                      </Stack>
+                      <Box
+                        sx={{
+                          px: 1,
+                          py: 0.25,
+                          borderRadius: `${SQ}px`,
+                          bgcolor: statusTint,
+                          border: '1px solid',
+                          borderColor: alpha(statusColor, theme.palette.mode === 'dark' ? 0.35 : 0.28),
+                          alignSelf: 'flex-start',
+                        }}
+                      >
+                        <Typography variant="caption" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                          {dayStatus === AvailabilityStatus.Unavailable ? 'לא זמין/ה' : 'זמין/ה'}
+                        </Typography>
+                      </Box>
                     </Stack>
 
+                    {hasExceptions ? (
+                      <Chip
+                        size="small"
+                        color="info"
+                        variant="outlined"
+                        label={exceptionsCount === 1 ? 'חריגה אחת לשעות' : `${exceptionsCount} חריגות לשעות`}
+                        sx={{ ...chipSquareSx, alignSelf: 'flex-start', fontWeight: 600, maxWidth: '100%' }}
+                      />
+                    ) : (
+                      <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.25, fontWeight: 500 }}>
+                        ללא חריגות
+                      </Typography>
+                    )}
+
                     {summary ? (
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.25, display: '-webkit-box', overflow: 'hidden', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                         {summary.text}
                       </Typography>
                     ) : null}
                   </Stack>
                 </Button>
-              </Box>
-            );
-          })}
+              );
+            })}
+          </Box>
         </Box>
       </Paper>
 
       <Drawer
-        anchor="left"
+        anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        PaperProps={{ sx: { width: { xs: '100%', sm: 440 }, p: 2.25 } }}
+        PaperProps={{
+          sx: {
+            width: { xs: '100%', sm: 460 },
+            p: 2.5,
+            borderRadius: 0,
+            bgcolor: 'background.paper',
+            maxHeight: '100vh',
+            height: '100%',
+            boxSizing: 'border-box',
+            overflowY: 'auto',
+          },
+        }}
       >
-        <Stack spacing={2} sx={{ height: '100%' }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-            <Stack spacing={0.25}>
-              <Typography variant="h6" sx={{ fontWeight: 900 }}>
+        <Stack spacing={2}>
+          <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={1}>
+            <Stack spacing={0.5}>
+              <Typography variant="overline" color="text.secondary">
+                עריכת יום
+              </Typography>
+              <Typography variant="h6" component="p">
                 {formatHebrewLongDate(selectedDate)}
               </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                הגדירי זמינות ליום הזה וחריגות לשעות ספציפיות
+              <Typography variant="body2" color="text.secondary">
+                בחרי מצב יום והוסיפי חריגות לשעות מיוחדות
               </Typography>
             </Stack>
 
-            <IconButton aria-label="סגירה" onClick={() => setDrawerOpen(false)}>
+            <IconButton aria-label="סגירה" onClick={() => setDrawerOpen(false)} size="small" sx={btnSquareSx}>
               <CloseIcon />
             </IconButton>
           </Stack>
 
           <Divider />
 
-          <Stack spacing={1.25}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 1.75,
-                borderRadius: 3,
-                border: '1px solid',
-                borderColor: 'divider',
-                bgcolor: 'background.paper',
-              }}
-            >
-              <Stack spacing={1.25}>
-                <Typography variant="body1" sx={{ fontWeight: 900 }}>
-                  מצב יום
-                </Typography>
+          <Stack spacing={2}>
+            <Card variant="outlined" sx={{ borderRadius: `${SQ}px`, bgcolor: 'background.paper' }}>
+              <CardContent>
+                <Stack spacing={1.5}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    מצב יום
+                  </Typography>
 
-                <ToggleButtonGroup
-                  exclusive
-                  value={selectedDayStatus}
-                  onChange={(_, next) => {
-                    if (next === null || next === undefined) return;
-                    setSelectedDayEntry({ dayStatus: next });
-                  }}
-                  aria-label="מצב יום"
-                  fullWidth
-                  sx={{
-                    '& .MuiToggleButton-root': {
-                      flex: 1,
-                      borderRadius: 999,
-                      fontWeight: 800,
-                      py: 1,
-                    },
-                  }}
-                >
-                  <ToggleButton value={AvailabilityStatus.Available} aria-label="זמין כל היום">
-                    זמין/ה כל היום
-                  </ToggleButton>
-                  <ToggleButton value={AvailabilityStatus.Unavailable} aria-label="לא זמין כל היום">
-                    לא זמין/ה כל היום
-                  </ToggleButton>
-                </ToggleButtonGroup>
+                  <ToggleButtonGroup
+                    exclusive
+                    value={selectedDayStatus}
+                    onChange={(_, next) => {
+                      if (next === null || next === undefined) return;
+                      setSelectedDayEntry({ dayStatus: next });
+                    }}
+                    aria-label="מצב יום"
+                    fullWidth
+                    sx={{
+                      '& .MuiToggleButtonGroup-grouped': { borderRadius: `${SQ}px` },
+                      '& .MuiToggleButton-root': {
+                        flex: 1,
+                        py: 1,
+                        borderRadius: `${SQ}px`,
+                      },
+                    }}
+                  >
+                    <ToggleButton value={AvailabilityStatus.Available} aria-label="זמין כל היום">
+                      זמין/ה כל היום
+                    </ToggleButton>
+                    <ToggleButton value={AvailabilityStatus.Unavailable} aria-label="לא זמין כל היום">
+                      לא זמין/ה כל היום
+                    </ToggleButton>
+                  </ToggleButtonGroup>
 
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  {selectedDayStatus === AvailabilityStatus.Available
-                    ? 'אפשר לחסום שעות בודדות באמצעות חריגות מסוג "לא זמין"'
-                    : 'אפשר להוסיף שעות בודדות כ"זמין" כדי לאפשר ראיון'}
-                </Typography>
-              </Stack>
-            </Paper>
+                  <Typography variant="body2" color="text.secondary">
+                    {selectedDayStatus === AvailabilityStatus.Available
+                      ? 'כדי לחסום שעות בודדות, הוסיפי חריגה מסוג "לא זמין"'
+                      : 'כדי לאפשר שעות בודדות, הוסיפי חריגה מסוג "זמין"'}
+                  </Typography>
+                </Stack>
+              </CardContent>
+            </Card>
 
             {selectedDayStatus === AvailabilityStatus.Unavailable ? (
-              <Stack spacing={1}>
-                <TextField
-                  label="סיבה ליום (אופציונלי)"
-                  value={selectedDayReasonStudent}
-                  onChange={(e) => setSelectedDayEntry({ dayReasonStudent: e.target.value })}
-                  fullWidth
-                />
-
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  <Chip
-                    clickable
-                    onClick={() => setSelectedDayEntry({ dayReasonStatus: AvailabilityReasonKind.Personal })}
-                    variant={selectedDayReasonStatus === AvailabilityReasonKind.Personal ? 'filled' : 'outlined'}
-                    label="פרטי"
-                  />
-                  <Chip
-                    clickable
-                    onClick={() => setSelectedDayEntry({ dayReasonStatus: AvailabilityReasonKind.Interview })}
-                    variant={selectedDayReasonStatus === AvailabilityReasonKind.Interview ? 'filled' : 'outlined'}
-                    label="ראיון"
-                  />
-                </Stack>
-              </Stack>
+              <Card variant="outlined" sx={{ borderRadius: `${SQ}px`, bgcolor: 'background.paper' }}>
+                <CardContent>
+                  <Stack spacing={1.5}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      סיבה ליום
+                    </Typography>
+                    <TextField
+                      label="סיבה (אופציונלי)"
+                      value={selectedDayReasonStudent}
+                      onChange={(e) => setSelectedDayEntry({ dayReasonStudent: e.target.value })}
+                      fullWidth
+                      sx={textFieldSquareSx}
+                    />
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      <Chip
+                        clickable
+                        onClick={() => setSelectedDayEntry({ dayReasonStatus: AvailabilityReasonKind.Personal })}
+                        variant={selectedDayReasonStatus === AvailabilityReasonKind.Personal ? 'filled' : 'outlined'}
+                        label="פרטי"
+                        sx={chipSquareSx}
+                      />
+                      <Chip
+                        clickable
+                        onClick={() => setSelectedDayEntry({ dayReasonStatus: AvailabilityReasonKind.Interview })}
+                        variant={selectedDayReasonStatus === AvailabilityReasonKind.Interview ? 'filled' : 'outlined'}
+                        label="ראיון"
+                        sx={chipSquareSx}
+                      />
+                    </Stack>
+                  </Stack>
+                </CardContent>
+              </Card>
             ) : null}
 
-            <Divider />
+            <Card variant="outlined" sx={{ borderRadius: `${SQ}px`, bgcolor: 'background.paper' }}>
+              <CardContent>
+                <Stack spacing={1.5}>
+                  <Stack spacing={0.5}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      הוספת חריגה
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {newIsAvailable ? 'חריגה מסוג "זמין" מאפשרת ראיון בשעות האלה' : 'חריגה מסוג "לא זמין" חוסמת ראיון בשעות האלה'}
+                    </Typography>
+                  </Stack>
 
-            <Typography variant="body1" sx={{ fontWeight: 700 }}>
-              הוספת חריגה ליום
-            </Typography>
+                  <SlotAvailabilityLineToggle
+                    available={newIsAvailable}
+                    onChange={setNewIsAvailable}
+                    ariaLabel="סוג חריגה חדשה"
+                  />
 
-            <Stack direction="row" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {newIsAvailable ? 'החלון הזה יסומן כזמין' : 'החלון הזה יסומן כלא זמין'}
-              </Typography>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  לא זמין
-                </Typography>
-                <Switch
-                  checked={newIsAvailable}
-                  onChange={(e) => setNewIsAvailable(e.target.checked)}
-                  inputProps={{ 'aria-label': 'סוג החלון' }}
-                />
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  זמין
-                </Typography>
-              </Stack>
-            </Stack>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <TextField
+                      label="התחלה"
+                      type="time"
+                      value={newStart}
+                      onChange={(e) => setNewStart(e.target.value)}
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                      inputProps={{ step: 300 }}
+                      sx={textFieldSquareSx}
+                    />
+                    <TextField
+                      label="סיום"
+                      type="time"
+                      value={newEnd}
+                      onChange={(e) => setNewEnd(e.target.value)}
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                      inputProps={{ step: 300 }}
+                      error={Boolean(newSlotError)}
+                      helperText={newSlotError || ' '}
+                      sx={textFieldSquareSx}
+                    />
+                  </Stack>
 
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <TextField
-                label="התחלה"
-                type="time"
-                value={newStart}
-                onChange={(e) => setNewStart(e.target.value)}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                inputProps={{ step: 300 }}
-              />
-              <TextField
-                label="סיום"
-                type="time"
-                value={newEnd}
-                onChange={(e) => setNewEnd(e.target.value)}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                inputProps={{ step: 300 }}
-                error={Boolean(newSlotError)}
-                helperText={newSlotError || ' '}
-              />
-            </Stack>
-
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <Button startIcon={<AddIcon />} onClick={commitAddNewSlot} disabled={Boolean(newSlotError)} variant="contained">
-                הוספה
-              </Button>
-              <Button onClick={() => quickAdd('morning')} variant="outlined">
-                בוקר (09–12)
-              </Button>
-              <Button onClick={() => quickAdd('noon')} variant="outlined">
-                צהריים (12–15)
-              </Button>
-              <Button onClick={() => quickAdd('evening')} variant="outlined">
-                אחה״צ (15–18)
-              </Button>
-            </Stack>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    <Button
+                      type="button"
+                      startIcon={<AddIcon />}
+                      onClick={commitAddNewSlot}
+                      disabled={Boolean(newSlotError)}
+                      variant="contained"
+                      sx={btnSquareSx}
+                    >
+                      הוספה
+                    </Button>
+                    <Button onClick={() => quickAdd('morning')} variant="outlined" sx={btnSquareSx}>
+                      בוקר (09–12)
+                    </Button>
+                    <Button onClick={() => quickAdd('noon')} variant="outlined" sx={btnSquareSx}>
+                      צהריים (12–15)
+                    </Button>
+                    <Button onClick={() => quickAdd('evening')} variant="outlined" sx={btnSquareSx}>
+                      אחה״צ (15–18)
+                    </Button>
+                  </Stack>
+                </Stack>
+              </CardContent>
+            </Card>
           </Stack>
 
-          <Divider />
-
-          <Stack spacing={1} sx={{ flex: 1, overflow: 'auto' }}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
-              <Typography variant="body1" sx={{ fontWeight: 700 }}>
-                החריגות שלי
-              </Typography>
-              <Chip size="small" label={`${selectedSlots.length} חלונות`} />
-            </Stack>
-
-            {selectedSlots.length === 0 ? (
-              <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  אין חריגות ליום הזה. אם סימנת "זמין כל היום" אפשר להוסיף חריגה "לא זמין" לשעות ספציפיות, ואם סימנת "לא זמין כל היום" אפשר להוסיף חריגה "זמין" לשעות ספציפיות.
-                </Typography>
-              </Paper>
-            ) : (
-              <Stack spacing={1}>
-                {selectedSlots.map((slot, idx) => (
-                  <Paper
-                    key={`${slot.start}-${slot.end}-${idx}`}
-                    elevation={0}
-                    sx={{ p: 1.5, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}
-                  >
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-                      <Stack spacing={0.25}>
-                        <Typography variant="body1" sx={{ fontWeight: 800 }}>
-                          {slotLabel(slot)}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                          {slot.status === AvailabilityStatus.Available ? 'זמין/ה לראיון' : 'לא זמין/ה לראיון'}
-                        </Typography>
-                      </Stack>
-
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <Tooltip title={slot.status === AvailabilityStatus.Available ? 'סימון כלא זמין' : 'סימון כזמין'}>
-                          <Switch
-                            checked={slot.status === AvailabilityStatus.Available}
-                            onChange={(e) =>
-                              updateSlot(idx, {
-                                status: e.target.checked ? AvailabilityStatus.Available : AvailabilityStatus.Unavailable,
-                              })
-                            }
-                            inputProps={{ 'aria-label': 'זמינות' }}
-                          />
-                        </Tooltip>
-
-                        <Button variant="outlined" color="inherit" onClick={() => removeSlot(idx)} aria-label="מחיקה">
-                          מחיקה
-                        </Button>
-                      </Stack>
+          <Card variant="outlined" sx={{ borderRadius: `${SQ}px`, bgcolor: 'background.paper' }}>
+            <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', bgcolor: subtleHeaderBg }}>
+              {(() => {
+                const availableExceptions = selectedSlots.filter((s) => s.status === AvailabilityStatus.Available).length;
+                const blockedExceptions = selectedSlots.length - availableExceptions;
+                return (
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1} flexWrap="wrap">
+                    <Stack spacing={0.25}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                        החריגות שלי
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        כל חריגה מגדירה טווח שעות שבו את זמין/ה או לא זמין/ה
+                      </Typography>
                     </Stack>
 
-                    {slot.status === AvailabilityStatus.Unavailable ? (
-                      <Stack spacing={1} sx={{ mt: 1 }}>
-                        <TextField
-                          label="סיבה (אופציונלי)"
-                          value={slot.reasonStudent || ''}
-                          onChange={(e) => updateSlot(idx, { reasonStudent: e.target.value })}
-                          fullWidth
-                        />
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      <Chip size="small" variant="outlined" label={`${selectedSlots.length} חריגות`} sx={chipSquareSx} />
+                      {availableExceptions > 0 ? (
+                        <Chip size="small" color="success" variant="outlined" label={`${availableExceptions} זמינות`} sx={chipSquareSx} />
+                      ) : null}
+                      {blockedExceptions > 0 ? (
+                        <Chip size="small" color="error" variant="outlined" label={`${blockedExceptions} חסומות`} sx={chipSquareSx} />
+                      ) : null}
+                    </Stack>
+                  </Stack>
+                );
+              })()}
+            </Box>
 
-                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                          <Chip
-                            clickable
-                            onClick={() => updateSlot(idx, { reasonStatus: AvailabilityReasonKind.Personal })}
-                            variant={slot.reasonStatus === AvailabilityReasonKind.Personal ? 'filled' : 'outlined'}
-                            label="פרטי"
-                          />
-                          <Chip
-                            clickable
-                            onClick={() => updateSlot(idx, { reasonStatus: AvailabilityReasonKind.Interview })}
-                            variant={slot.reasonStatus === AvailabilityReasonKind.Interview ? 'filled' : 'outlined'}
-                            label="ראיון"
-                          />
-                        </Stack>
-                      </Stack>
-                    ) : null}
-                  </Paper>
-                ))}
-              </Stack>
-            )}
-          </Stack>
+            <CardContent sx={{ maxHeight: 'min(360px, 50vh)', overflowY: 'auto' }}>
+              {selectedSlots.length === 0 ? (
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: `${SQ}px`,
+                    border: '1px dashed',
+                    borderColor: 'divider',
+                    bgcolor: 'background.default',
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    אין חריגות ליום הזה
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    אם סימנת "זמין כל היום" אפשר להוסיף חריגה "לא זמין" לשעות ספציפיות. אם סימנת "לא זמין כל היום" אפשר להוסיף חריגה "זמין" לשעות ספציפיות.
+                  </Typography>
+                </Box>
+              ) : (
+                <Stack spacing={1.5}>
+                  {selectedSlots.map((slot, idx) => {
+                    const slotStatusColor = slot.status === AvailabilityStatus.Available ? theme.palette.success.main : theme.palette.error.main;
+                    const slotTint = alpha(slotStatusColor, theme.palette.mode === 'dark' ? 0.1 : 0.06);
 
-          <Divider />
+                    return (
+                      <Paper
+                        key={`${slot.start}-${slot.end}-${idx}`}
+                        elevation={0}
+                        sx={{
+                          borderRadius: `${SQ}px`,
+                          overflow: 'hidden',
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          bgcolor: slotTint,
+                          borderInlineStart: '3px solid',
+                          borderInlineStartColor: alpha(slotStatusColor, theme.palette.mode === 'dark' ? 0.75 : 0.65),
+                        }}
+                      >
+                        <Box sx={{ p: 1.5 }}>
+                          <Stack spacing={1.25}>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ sm: 'center' }} justifyContent="space-between" gap={1}>
+                              <Stack spacing={0.25}>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                                  {slotLabel(slot)}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  {slot.status === AvailabilityStatus.Available ? 'זמין/ה לראיון' : 'לא זמין/ה לראיון'}
+                                </Typography>
+                              </Stack>
 
-          <Stack direction="row" spacing={1} justifyContent="flex-start">
-            <Button variant="contained" onClick={() => setDrawerOpen(false)}>
+                              <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap sx={{ width: '100%' }}>
+                                <SlotAvailabilityLineToggle
+                                  dense
+                                  available={slot.status === AvailabilityStatus.Available}
+                                  onChange={(isAvail) =>
+                                    updateSlot(idx, {
+                                      status: isAvail ? AvailabilityStatus.Available : AvailabilityStatus.Unavailable,
+                                    })
+                                  }
+                                  ariaLabel={`זמינות לחריגה ${slotLabel(slot)}`}
+                                />
+
+                                <Button
+                                  variant="text"
+                                  color="inherit"
+                                  onClick={() => removeSlot(idx)}
+                                  aria-label="מחיקה"
+                                  sx={{ fontWeight: 500, ...btnSquareSx }}
+                                >
+                                  מחיקה
+                                </Button>
+                              </Stack>
+                            </Stack>
+
+                            {slot.status === AvailabilityStatus.Unavailable ? (
+                              <Box>
+                                <Divider sx={{ mb: 1.5 }} />
+                                <Stack spacing={1.25}>
+                                  <TextField
+                                    label="סיבה (אופציונלי)"
+                                    value={slot.reasonStudent || ''}
+                                    onChange={(e) => updateSlot(idx, { reasonStudent: e.target.value })}
+                                    fullWidth
+                                    sx={textFieldSquareSx}
+                                  />
+
+                                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                    <Chip
+                                      clickable
+                                      onClick={() => updateSlot(idx, { reasonStatus: AvailabilityReasonKind.Personal })}
+                                      variant={slot.reasonStatus === AvailabilityReasonKind.Personal ? 'filled' : 'outlined'}
+                                      label="פרטי"
+                                      sx={chipSquareSx}
+                                    />
+                                    <Chip
+                                      clickable
+                                      onClick={() => updateSlot(idx, { reasonStatus: AvailabilityReasonKind.Interview })}
+                                      variant={slot.reasonStatus === AvailabilityReasonKind.Interview ? 'filled' : 'outlined'}
+                                      label="ראיון"
+                                      sx={chipSquareSx}
+                                    />
+                                  </Stack>
+                                </Stack>
+                              </Box>
+                            ) : null}
+                          </Stack>
+                        </Box>
+                      </Paper>
+                    );
+                  })}
+                </Stack>
+              )}
+            </CardContent>
+          </Card>
+
+          <Box
+            sx={{
+              position: 'sticky',
+              bottom: 0,
+              pt: 1.5,
+              mt: 'auto',
+              bgcolor: 'background.paper',
+              borderTop: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
+            <Button variant="contained" onClick={() => setDrawerOpen(false)} sx={btnSquareSx}>
               סיום
             </Button>
-          </Stack>
+          </Box>
         </Stack>
       </Drawer>
     </Stack>
   );
 }
-
