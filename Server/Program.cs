@@ -3,12 +3,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using SchedulingService.BLL.Repositories;
 using SchedulingService.BLL.Services;
+using SchedulingService.Clients;
 using SchedulingService.Data;
 using SchedulingService.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<SchedulingDbContext>(options =>
 {
@@ -25,6 +28,21 @@ builder.Services.AddScoped<ScheduledInterviewsRepository>();
 builder.Services.AddScoped<InterviewSlotsRepository>();
 builder.Services.AddScoped<InterviewSlotService>();
 builder.Services.AddScoped<ScheduleInterviewsService>();
+
+builder.Services.Configure<ExternalServicesOptions>(
+    builder.Configuration.GetSection("ExternalServices"));
+builder.Services.AddHttpClient<IJobsServiceClient, JobsServiceClient>(
+    (sp, client) =>
+    {
+        var options = sp
+            .GetRequiredService<Microsoft.Extensions.Options.IOptions<ExternalServicesOptions>>()
+            .Value;
+        if (string.IsNullOrWhiteSpace(options.JobsUrl))
+            throw new InvalidOperationException("ExternalServices:JobsUrl is not configured.");
+
+        client.BaseAddress = new Uri(options.JobsUrl);
+        client.Timeout = TimeSpan.FromSeconds(30);
+    });
 
 builder.Services.AddSingleton<IMapper>(_ =>
 {
@@ -44,6 +62,12 @@ builder.Services.AddSingleton<IMapper>(_ =>
 });
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.MapControllers();
 
