@@ -1,2 +1,5 @@
 # Local Jobs microservice checkout — not part of this repository
 JobService/
+
+# Client app lives in its own repo: https://github.com/noa-1912/seminar-client
+Client/
