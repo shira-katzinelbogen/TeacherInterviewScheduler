@@ -5,12 +5,10 @@
   color: #3d3935;
 }
 
-@media (prefers-color-scheme: dark) {
-  .interview-details-dialog .MuiDialog-paper {
-    background-color: #2a2623;
-    color: #e8e4e0;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-  }
+[data-theme="dark"] .interview-details-dialog .MuiDialog-paper {
+  background-color: rgba(38, 33, 29, 0.98);
+  color: var(--color-text-primary);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.42);
 }
 
 .interview-details-title {
@@ -19,11 +17,9 @@
   background: linear-gradient(135deg, #faf8f5 0%, #f5f0e8 100%);
 }
 
-@media (prefers-color-scheme: dark) {
-  .interview-details-title {
-    background: linear-gradient(135deg, #3d3935 0%, #2a2623 100%);
-    border-bottom-color: #4a4540;
-  }
+[data-theme="dark"] .interview-details-title {
+  background: linear-gradient(135deg, #332d29 0%, #26211d 100%);
+  border-bottom-color: var(--color-border-medium);
 }
 
 .interview-details-title .MuiTypography-h6 {
@@ -32,10 +28,8 @@
   font-size: 1.3rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .interview-details-title .MuiTypography-h6 {
-    color: #e8e4e0;
-  }
+[data-theme="dark"] .interview-details-title .MuiTypography-h6 {
+  color: var(--color-text-primary);
 }
 
 .interview-details-title .MuiIconButton-root {
@@ -43,10 +37,8 @@
   transition: all 0.2s ease;
 }
 
-@media (prefers-color-scheme: dark) {
-  .interview-details-title .MuiIconButton-root {
-    color: #a89f9a;
-  }
+[data-theme="dark"] .interview-details-title .MuiIconButton-root {
+  color: var(--color-text-secondary);
 }
 
 .interview-details-title .MuiIconButton-root:hover {
@@ -54,11 +46,9 @@
   background-color: rgba(74, 69, 64, 0.08);
 }
 
-@media (prefers-color-scheme: dark) {
-  .interview-details-title .MuiIconButton-root:hover {
-    color: #e8e4e0;
-    background-color: rgba(232, 228, 224, 0.1);
-  }
+[data-theme="dark"] .interview-details-title .MuiIconButton-root:hover {
+  color: var(--color-text-primary);
+  background-color: rgba(238, 228, 219, 0.1);
 }
 
 .interview-details-content {
@@ -66,10 +56,8 @@
   background-color: #f5f0e8;
 }
 
-@media (prefers-color-scheme: dark) {
-  .interview-details-content {
-    background-color: #3d3935;
-  }
+[data-theme="dark"] .interview-details-content {
+  background-color: #2f2925;
 }
 
 .detail-section {
@@ -81,11 +69,9 @@
   transition: all 0.3s ease;
 }
 
-@media (prefers-color-scheme: dark) {
-  .detail-section {
-    background: #2a2623;
-    border-color: #4a4540;
-  }
+[data-theme="dark"] .detail-section {
+  background: rgba(38, 33, 29, 0.92);
+  border-color: var(--color-border-medium);
 }
 
 .detail-section:last-child {
@@ -97,11 +83,9 @@
   box-shadow: 0 4px 12px rgba(74, 69, 64, 0.1);
 }
 
-@media (prefers-color-scheme: dark) {
-  .detail-section:hover {
-    border-color: #d4cfc9;
-    box-shadow: 0 4px 12px rgba(232, 228, 224, 0.15);
-  }
+[data-theme="dark"] .detail-section:hover {
+  border-color: #8c7f73;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
 }
 
 .detail-section .MuiTypography-h6 {
@@ -111,10 +95,8 @@
   font-size: 1.05rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .detail-section .MuiTypography-h6 {
-    color: #d4cfc9;
-  }
+[data-theme="dark"] .detail-section .MuiTypography-h6 {
+  color: var(--color-text-primary);
 }
 
 .detail-section .MuiTypography-body1 {
@@ -124,10 +106,8 @@
   font-size: 0.95rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .detail-section .MuiTypography-body1 {
-    color: #c5bfb8;
-  }
+[data-theme="dark"] .detail-section .MuiTypography-body1 {
+  color: var(--color-text-secondary);
 }
 
 .detail-section .MuiTypography-body1 strong {
@@ -135,10 +115,8 @@
   font-weight: 600;
 }
 
-@media (prefers-color-scheme: dark) {
-  .detail-section .MuiTypography-body1 strong {
-    color: #e8e4e0;
-  }
+[data-theme="dark"] .detail-section .MuiTypography-body1 strong {
+  color: var(--color-text-primary);
 }
 
 .detail-section .MuiDivider-root {
@@ -146,10 +124,8 @@
   opacity: 0.5;
 }
 
-@media (prefers-color-scheme: dark) {
-  .detail-section .MuiDivider-root {
-    border-color: #4a4540;
-  }
+[data-theme="dark"] .detail-section .MuiDivider-root {
+  border-color: var(--color-border-soft);
 }
 
 .comments-box {
@@ -160,11 +136,9 @@
   margin-top: 12px;
 }
 
-@media (prefers-color-scheme: dark) {
-  .comments-box {
-    background: linear-gradient(135deg, #3d3935 0%, #2a2623 100%);
-    border-left-color: #d4cfc9;
-  }
+[data-theme="dark"] .comments-box {
+  background: linear-gradient(135deg, #3a332e 0%, #2b2521 100%);
+  border-left-color: #8c7f73;
 }
 
 .comments-box .MuiTypography-root {
@@ -173,10 +147,8 @@
   line-height: 1.6;
 }
 
-@media (prefers-color-scheme: dark) {
-  .comments-box .MuiTypography-root {
-    color: #c5bfb8;
-  }
+[data-theme="dark"] .comments-box .MuiTypography-root {
+  color: var(--color-text-secondary);
 }
 
 .status-chip {
@@ -191,11 +163,9 @@
   justify-content: center;
 }
 
-@media (prefers-color-scheme: dark) {
-  .interview-details-actions {
-    background: linear-gradient(135deg, #3d3935 0%, #2a2623 100%);
-    border-top-color: #4a4540;
-  }
+[data-theme="dark"] .interview-details-actions {
+  background: linear-gradient(135deg, #332d29 0%, #26211d 100%);
+  border-top-color: var(--color-border-medium);
 }
 
 .interview-details-actions .MuiButton-root {

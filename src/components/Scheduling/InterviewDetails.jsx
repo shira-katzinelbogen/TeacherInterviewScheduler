@@ -9,7 +9,8 @@ import {
   Divider,
   Grid,
   IconButton,
-  Chip
+  Chip,
+  useTheme
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import EventIcon from '@mui/icons-material/Event';
@@ -18,6 +19,8 @@ import InterviewStatusDisplay from './InterviewStatusDisplay.jsx';
 import './InterviewDetails.css';
 
 function InterviewDetails({ interview, open, onClose }) {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   if (!interview) return null;
 
   const formatDateTime = (dateString) => {
@@ -71,8 +74,8 @@ function InterviewDetails({ interview, open, onClose }) {
                   height: '28px', 
                   fontSize: '0.8rem', 
                   padding: '0 12px',
-                  borderColor: '#a89f9a',
-                  color: '#6b6660'
+                  borderColor: isDarkMode ? theme.palette.divider : '#a89f9a',
+                  color: isDarkMode ? theme.palette.text.secondary : '#6b6660'
                 }}
               />
             </Box>
@@ -91,18 +94,22 @@ function InterviewDetails({ interview, open, onClose }) {
           {/* Date and Time Section */}
           <Grid item xs={12} md={6}>
             <Box className="detail-section">
-              <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: '#1565c0', marginBottom: '16px' }}>
+              <Typography
+                variant="h6"
+                component="h3"
+                sx={{ fontWeight: '600', color: isDarkMode ? theme.palette.text.primary : '#4a4540', marginBottom: '16px' }}
+              >
                 זמן ותאריך
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <Box display="flex" alignItems="center" gap={1}>
-                  <EventIcon sx={{ fontSize: '18px', color: '#4a4540' }} />
+                  <EventIcon sx={{ fontSize: '18px', color: isDarkMode ? theme.palette.text.secondary : '#4a4540' }} />
                   <Typography variant="body1">
                     <strong>תאריך:</strong> {startDateTime.date}
                   </Typography>
                 </Box>
                 <Box display="flex" alignItems="center" gap={1}>
-                  <AccessTimeIcon sx={{ fontSize: '18px', color: '#4a4540' }} />
+                  <AccessTimeIcon sx={{ fontSize: '18px', color: isDarkMode ? theme.palette.text.secondary : '#4a4540' }} />
                   <Typography variant="body1">
                     <strong>שעה:</strong> {startDateTime.time} - {endDateTime.time}
                   </Typography>
@@ -115,7 +122,11 @@ function InterviewDetails({ interview, open, onClose }) {
           {interview.place && (
             <Grid item xs={12} md={6}>
               <Box className="detail-section">
-                <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: '#4a4540', marginBottom: '16px' }}>
+                <Typography
+                  variant="h6"
+                  component="h3"
+                  sx={{ fontWeight: '600', color: isDarkMode ? theme.palette.text.primary : '#4a4540', marginBottom: '16px' }}
+                >
                   מיקום
                 </Typography>
                 <Typography variant="body1" sx={{ fontSize: '0.95rem' }}>
@@ -128,7 +139,11 @@ function InterviewDetails({ interview, open, onClose }) {
           {/* Interviewer and Subject Section */}
           <Grid item xs={12} md={6}>
             <Box className="detail-section">
-              <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: '#6b6660', marginBottom: '16px' }}>
+              <Typography
+                variant="h6"
+                component="h3"
+                sx={{ fontWeight: '600', color: isDarkMode ? theme.palette.text.primary : '#6b6660', marginBottom: '16px' }}
+              >
                 פרטים אישיים
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -145,7 +160,11 @@ function InterviewDetails({ interview, open, onClose }) {
           {/* Additional Details Section */}
           <Grid item xs={12} md={6}>
             <Box className="detail-section">
-              <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: '#6b6660', marginBottom: '16px' }}>
+              <Typography
+                variant="h6"
+                component="h3"
+                sx={{ fontWeight: '600', color: isDarkMode ? theme.palette.text.primary : '#6b6660', marginBottom: '16px' }}
+              >
                 פרטים נוספים
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -160,7 +179,11 @@ function InterviewDetails({ interview, open, onClose }) {
           {interview.comments && (
             <Grid item xs={12}>
               <Box className="detail-section">
-                <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: '#6b6660', marginBottom: '16px' }}>
+                <Typography
+                  variant="h6"
+                  component="h3"
+                  sx={{ fontWeight: '600', color: isDarkMode ? theme.palette.text.primary : '#6b6660', marginBottom: '16px' }}
+                >
                   הערות
                 </Typography>
                 <Box className="comments-box">
@@ -179,7 +202,9 @@ function InterviewDetails({ interview, open, onClose }) {
           onClick={onClose}
           variant="contained"
           sx={{
-            background: 'linear-gradient(135deg, #4a4540, #3d3935)',
+            background: isDarkMode
+              ? 'linear-gradient(135deg, #5b534c, #4a4540)'
+              : 'linear-gradient(135deg, #4a4540, #3d3935)',
             textTransform: 'none',
             fontSize: '0.95rem',
             fontWeight: '600',

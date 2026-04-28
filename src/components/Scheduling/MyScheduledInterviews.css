@@ -4,6 +4,10 @@
   margin: 0 auto;
 }
 
+[data-theme="dark"] .my-scheduled-interviews {
+  color: var(--color-text-primary);
+}
+
 .filters-container {
   background: white;
   padding: 24px;
@@ -201,6 +205,80 @@
 .interviews-empty .MuiTypography-body1 {
   color: #999;
   font-size: 1.05rem;
+}
+
+[data-theme="dark"] .filters-container {
+  background: rgba(38, 33, 29, 0.92);
+  border-color: var(--color-border-medium);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.26);
+}
+
+[data-theme="dark"] .filters-container:hover {
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.32);
+}
+
+[data-theme="dark"] .filters-container .MuiSvgIcon-root {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .filters-container .MuiOutlinedInput-root {
+  background: rgba(48, 41, 36, 0.9);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .filters-container .MuiInputLabel-root,
+[data-theme="dark"] .filters-container .MuiSelect-icon {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .interview-card {
+  background: rgba(38, 33, 29, 0.94);
+  border-color: var(--color-border-medium);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+}
+
+[data-theme="dark"] .interview-card::before {
+  background: linear-gradient(90deg, #8c7f73, #c5b6a7);
+}
+
+[data-theme="dark"] .interview-card:hover {
+  border-color: #8c7f73;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.34);
+}
+
+[data-theme="dark"] .interview-card .MuiTypography-h6,
+[data-theme="dark"] .interview-card .MuiTypography-body2,
+[data-theme="dark"] .interview-card .MuiTypography-body2 svg {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .interview-card .MuiDivider-root {
+  border-color: var(--color-border-soft);
+  opacity: 0.7;
+}
+
+[data-theme="dark"] .view-details-btn {
+  background: linear-gradient(135deg, #5b534c, #4a4540);
+  color: var(--btn-primary-text);
+}
+
+[data-theme="dark"] .view-details-btn:hover {
+  background: linear-gradient(135deg, #6a6159, #565049);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="dark"] .interviews-loading .MuiCircularProgress-root {
+  color: #c5b6a7;
+}
+
+[data-theme="dark"] .interviews-empty {
+  background: rgba(38, 33, 29, 0.94);
+  border-color: var(--color-border-medium);
+}
+
+[data-theme="dark"] .interviews-empty .MuiTypography-body1,
+[data-theme="dark"] .interviews-empty .MuiTypography-h6 {
+  color: var(--color-text-secondary);
 }
 
 /* Responsive design */
