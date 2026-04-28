@@ -8,6 +8,7 @@ import About from './pages/About/About'
 import Contact from './pages/Contact/Contact'
 import Login from './pages/Login/Login'
 import Signup from './pages/Signup/Signup'
+import ScheduledInterviews from './pages/ScheduledInterviews/ScheduledInterviews'
 function App() {
   return (
     <Layout>
@@ -18,6 +19,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/my-interviews" element={<ScheduledInterviews />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="*" element={<Navigate to="/" replace />} />
