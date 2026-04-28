@@ -9,7 +9,8 @@ import {
   Divider,
   Grid,
   IconButton,
-  Chip
+  Chip,
+  useTheme
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import EventIcon from '@mui/icons-material/Event';
@@ -18,6 +19,8 @@ import InterviewStatusDisplay from './InterviewStatusDisplay.jsx';
 import './InterviewDetails.css';
 
 function InterviewDetails({ interview, open, onClose }) {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   if (!interview) return null;
 
   const formatDateTime = (dateString) => {
@@ -63,20 +66,24 @@ function InterviewDetails({ interview, open, onClose }) {
         <Box mb={3}>
           <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
             <Box>
-              <Typography variant="h5" component="h2" sx={{ fontWeight: '600', color: '#1565c0', marginBottom: '8px' }}>
-                ריאיון {interview.interviewType || 'כללי'}
-              </Typography>
               <Chip
                 label={interview.interviewType || 'לא צוין'}
                 variant="outlined"
                 size="small"
-                sx={{ height: '24px', fontSize: '0.75rem' }}
+                sx={{
+                  height: '24px',
+                  fontSize: '0.75rem',
+                  borderColor: isDarkMode ? '#64b5f6' : '#a89f9a',
+                  color: isDarkMode ? '#b0b0b0' : '#6b6660'
+                }}
               />
             </Box>
-            <InterviewStatusDisplay
-              status={interview.interviewStatus}
-              size="medium"
-            />
+            <Box sx={{ mt: 1 }}>
+              <InterviewStatusDisplay
+                status={interview.interviewStatus}
+                size="medium"
+              />
+            </Box>
           </Box>
           <Divider sx={{ opacity: 0.4 }} />
         </Box>
@@ -86,18 +93,18 @@ function InterviewDetails({ interview, open, onClose }) {
           {/* Date and Time Section */}
           <Grid item xs={12} md={6}>
             <Box className="detail-section">
-              <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: '#1565c0', marginBottom: '16px' }}>
+              <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: isDarkMode ? '#64b5f6' : '#4a4540', marginBottom: '16px' }}>
                 זמן ותאריך
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <Box display="flex" alignItems="center" gap={1}>
-                  <EventIcon sx={{ fontSize: '18px', color: '#1976d2' }} />
+                  <EventIcon sx={{ fontSize: '18px', color: isDarkMode ? '#64b5f6' : '#4a4540' }} />
                   <Typography variant="body1">
                     <strong>תאריך:</strong> {startDateTime.date}
                   </Typography>
                 </Box>
                 <Box display="flex" alignItems="center" gap={1}>
-                  <AccessTimeIcon sx={{ fontSize: '18px', color: '#1976d2' }} />
+                  <AccessTimeIcon sx={{ fontSize: '18px', color: isDarkMode ? '#64b5f6' : '#4a4540' }} />
                   <Typography variant="body1">
                     <strong>שעה:</strong> {startDateTime.time} - {endDateTime.time}
                   </Typography>
@@ -110,7 +117,7 @@ function InterviewDetails({ interview, open, onClose }) {
           {interview.place && (
             <Grid item xs={12} md={6}>
               <Box className="detail-section">
-                <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: '#1565c0', marginBottom: '16px' }}>
+                <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: isDarkMode ? '#64b5f6' : '#4a4540', marginBottom: '16px' }}>
                   מיקום
                 </Typography>
                 <Typography variant="body1" sx={{ fontSize: '0.95rem' }}>
@@ -120,10 +127,31 @@ function InterviewDetails({ interview, open, onClose }) {
             </Grid>
           )}
 
+          {/* Interviewer and Subject Section */}
+          <Grid item xs={12} md={6}>
+            <Box className="detail-section">
+              <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: isDarkMode ? '#64b5f6' : '#4a4540', marginBottom: '16px' }}>
+                פרטים אישיים
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {interview.interviewerName && (
+                  <Typography variant="body1">
+                    <strong>המראיין:</strong> {interview.interviewerName}
+                  </Typography>
+                )}
+                {interview.subject && (
+                  <Typography variant="body1">
+                    <strong>נושא:</strong> {interview.subject}
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          </Grid>
+
           {/* Additional Details Section */}
           <Grid item xs={12}>
             <Box className="detail-section">
-              <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: '#1565c0', marginBottom: '16px' }}>
+              <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: isDarkMode ? '#64b5f6' : '#4a4540', marginBottom: '16px' }}>
                 פרטים נוספים
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -144,7 +172,7 @@ function InterviewDetails({ interview, open, onClose }) {
           {interview.comments && (
             <Grid item xs={12}>
               <Box className="detail-section">
-                <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: '#1565c0', marginBottom: '16px' }}>
+                <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: isDarkMode ? '#64b5f6' : '#4a4540', marginBottom: '16px' }}>
                   הערות
                 </Typography>
                 <Box className="comments-box">
@@ -163,7 +191,9 @@ function InterviewDetails({ interview, open, onClose }) {
           onClick={onClose}
           variant="contained"
           sx={{
-            background: 'linear-gradient(135deg, #1976d2, #1565c0)',
+            background: isDarkMode
+              ? 'linear-gradient(135deg, #1976d2, #1565c0)'
+              : 'linear-gradient(135deg, #4a4540, #3d3935)',
             textTransform: 'none',
             fontSize: '0.95rem',
             fontWeight: '600',

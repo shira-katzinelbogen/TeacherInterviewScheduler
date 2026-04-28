@@ -15,7 +15,8 @@ import {
   Select,
   MenuItem,
   Stack,
-  Chip
+  Chip,
+  useTheme
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SortIcon from '@mui/icons-material/Sort';
@@ -30,6 +31,8 @@ import { mockScheduledInterviews } from './mockData.js';
 import './MyScheduledInterviews.css';
 
 function MyScheduledInterviews() {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -131,13 +134,13 @@ function MyScheduledInterviews() {
     <Box className="my-scheduled-interviews">
       {/* Filters Section */}
       <Box className="filters-container" mb={3}>
-        <Typography variant="subtitle2" sx={{ fontWeight: '600', marginBottom: '16px', color: '#1565c0' }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: '600', marginBottom: '16px', color: isDarkMode ? '#64b5f6' : '#4a4540' }}>
           סנן ומיין
         </Typography>
         
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <FilterListIcon sx={{ fontSize: '24px', color: '#1976d2' }} />
+            <FilterListIcon sx={{ fontSize: '24px', color: isDarkMode ? '#64b5f6' : '#4a4540' }} />
             <FormControl sx={{ minWidth: 180 }} size="small">
               <InputLabel id="status-filter-label">סנן לפי סטטוס</InputLabel>
               <Select
@@ -155,7 +158,7 @@ function MyScheduledInterviews() {
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <SortIcon sx={{ fontSize: '24px', color: '#1976d2' }} />
+            <SortIcon sx={{ fontSize: '24px', color: isDarkMode ? '#64b5f6' : '#4a4540' }} />
             <FormControl sx={{ minWidth: 180 }} size="small">
               <InputLabel id="sort-label">מיין לפי</InputLabel>
               <Select
@@ -176,7 +179,7 @@ function MyScheduledInterviews() {
 
       {/* Results Summary */}
       {interviews.length > 0 && (
-        <Typography variant="body2" sx={{ color: '#666', marginBottom: '20px', fontWeight: '500' }}>
+        <Typography variant="body2" sx={{ color: isDarkMode ? '#b0b0b0' : '#666', marginBottom: '20px', fontWeight: '500' }}>
           {filteredAndSortedInterviews.length === 0
             ? `מוצגים 0 מתוך ${interviews.length} ריאיונות (ריאיונות לא תואמים לסנן)`
             : `מוצגים ${filteredAndSortedInterviews.length} מתוך ${interviews.length} ריאיונות`}
@@ -187,11 +190,11 @@ function MyScheduledInterviews() {
       {interviews.length === 0 ? (
         <Box className="interviews-empty">
           <Box sx={{ textAlign: 'center' }}>
-            <EventIcon sx={{ fontSize: '48px', color: '#ccc', marginBottom: '16px' }} />
-            <Typography variant="h6" sx={{ color: '#999', marginBottom: '8px' }}>
+            <EventIcon sx={{ fontSize: '48px', color: isDarkMode ? '#64b5f6' : '#a89f9a', marginBottom: '16px' }} />
+            <Typography variant="h6" sx={{ color: isDarkMode ? '#b0b0b0' : '#666', marginBottom: '8px' }}>
               אין ריאיונות מתוכננים כרגע
             </Typography>
-            <Typography variant="body2" sx={{ color: '#bbb' }}>
+            <Typography variant="body2" sx={{ color: isDarkMode ? '#999' : '#999' }}>
               כל הריאיונות שלך יופיעו כאן
             </Typography>
           </Box>
@@ -199,11 +202,11 @@ function MyScheduledInterviews() {
       ) : filteredAndSortedInterviews.length === 0 ? (
         <Box className="interviews-empty">
           <Box sx={{ textAlign: 'center' }}>
-            <FilterListIcon sx={{ fontSize: '48px', color: '#ccc', marginBottom: '16px' }} />
-            <Typography variant="h6" sx={{ color: '#999', marginBottom: '8px' }}>
+            <FilterListIcon sx={{ fontSize: '48px', color: isDarkMode ? '#64b5f6' : '#a89f9a', marginBottom: '16px' }} />
+            <Typography variant="h6" sx={{ color: isDarkMode ? '#b0b0b0' : '#666', marginBottom: '8px' }}>
               לא נמצאו ריאיונות
             </Typography>
-            <Typography variant="body2" sx={{ color: '#bbb' }}>
+            <Typography variant="body2" sx={{ color: isDarkMode ? '#999' : '#999' }}>
               לא נמצאו ריאיונות התואמים לסנן שנבחר. נסו לשנות את הסנן או הסדר.
             </Typography>
           </Box>
@@ -222,7 +225,7 @@ function MyScheduledInterviews() {
                     {/* Card Header - Title and Status */}
                     <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
                       <Box>
-                        <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: '#1565c0' }}>
+                        <Typography variant="h6" component="h3" sx={{ fontWeight: '600', color: isDarkMode ? '#64b5f6' : '#4a4540' }}>
                           {interviewTypeLabel}
                         </Typography>
                         <Chip
@@ -244,16 +247,16 @@ function MyScheduledInterviews() {
                     <Box className="interview-meta">
                       {/* Date */}
                       <Box display="flex" alignItems="center" gap={1.5}>
-                        <EventIcon sx={{ fontSize: '20px', color: '#1976d2' }} />
-                        <Typography variant="body2" sx={{ color: '#444', fontWeight: '500' }}>
+                        <EventIcon sx={{ fontSize: '20px', color: isDarkMode ? '#64b5f6' : '#4a4540' }} />
+                        <Typography variant="body2" sx={{ color: isDarkMode ? '#b0b0b0' : '#444', fontWeight: '500' }}>
                           {startDateTime.date}
                         </Typography>
                       </Box>
 
                       {/* Time */}
                       <Box display="flex" alignItems="center" gap={1.5}>
-                        <AccessTimeIcon sx={{ fontSize: '20px', color: '#1976d2' }} />
-                        <Typography variant="body2" sx={{ color: '#444', fontWeight: '500' }}>
+                        <AccessTimeIcon sx={{ fontSize: '20px', color: isDarkMode ? '#64b5f6' : '#4a4540' }} />
+                        <Typography variant="body2" sx={{ color: isDarkMode ? '#b0b0b0' : '#444', fontWeight: '500' }}>
                           {startDateTime.time} - {endDateTime.time}
                         </Typography>
                       </Box>
@@ -261,8 +264,8 @@ function MyScheduledInterviews() {
                       {/* Location */}
                       {interview.place && (
                         <Box display="flex" alignItems="center" gap={1.5}>
-                          <LocationOnIcon sx={{ fontSize: '20px', color: '#1976d2' }} />
-                          <Typography variant="body2" sx={{ color: '#444', fontWeight: '500' }}>
+                          <LocationOnIcon sx={{ fontSize: '20px', color: isDarkMode ? '#64b5f6' : '#4a4540' }} />
+                          <Typography variant="body2" sx={{ color: isDarkMode ? '#b0b0b0' : '#444', fontWeight: '500' }}>
                             {interview.place}
                           </Typography>
                         </Box>
@@ -271,8 +274,8 @@ function MyScheduledInterviews() {
                       {/* Comments */}
                       {interview.comments && (
                         <Box display="flex" alignItems="flex-start" gap={1.5}>
-                          <ChatIcon sx={{ fontSize: '20px', color: '#1976d2', marginTop: '2px' }} />
-                          <Typography variant="body2" sx={{ color: '#666', fontStyle: 'italic', lineHeight: '1.5' }}>
+                          <ChatIcon sx={{ fontSize: '20px', color: isDarkMode ? '#64b5f6' : '#4a4540', marginTop: '2px' }} />
+                          <Typography variant="body2" sx={{ color: isDarkMode ? '#999' : '#666', fontStyle: 'italic', lineHeight: '1.5' }}>
                             {interview.comments}
                           </Typography>
                         </Box>

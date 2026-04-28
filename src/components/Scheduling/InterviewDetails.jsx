@@ -59,32 +59,29 @@ function InterviewDetails({ interview, open, onClose }) {
       </DialogTitle>
 
       <DialogContent className="interview-details-content">
-        {/* Header Section */}
+        {/* Header Section - Only Type Tag */}
         <Box mb={3}>
           <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
             <Box flex={1}>
-              <Typography variant="h5" component="h2" sx={{ fontWeight: '600', color: '#4a4540', marginBottom: '8px' }}>
-                {interview.subject || 'ללא נושא'}
-              </Typography>
-              <Box display="flex" gap={1} flexWrap="wrap">
-                <Chip
-                  label={interview.interviewType || 'לא צוין'}
-                  variant="outlined"
-                  size="small"
-                  sx={{ height: '28px', fontSize: '0.8rem', padding: '0 8px' }}
-                />
-                <Chip
-                  label={interview.interviewerName || 'לא צוין'}
-                  variant="filled"
-                  size="small"
-                  sx={{ height: '28px', fontSize: '0.8rem', padding: '0 8px', backgroundColor: '#e8e4e0', color: '#4a4540' }}
-                />
-              </Box>
+              <Chip
+                label={interview.interviewType || 'לא צוין'}
+                variant="outlined"
+                size="small"
+                sx={{ 
+                  height: '28px', 
+                  fontSize: '0.8rem', 
+                  padding: '0 12px',
+                  borderColor: '#a89f9a',
+                  color: '#6b6660'
+                }}
+              />
             </Box>
-            <InterviewStatusDisplay
-              status={interview.interviewStatus}
-              size="medium"
-            />
+            <Box sx={{ mt: 2 }}>
+              <InterviewStatusDisplay
+                status={interview.interviewStatus}
+                size="medium"
+              />
+            </Box>
           </Box>
           <Divider sx={{ opacity: 0.4 }} />
         </Box>
