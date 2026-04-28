@@ -201,6 +201,48 @@ public class InterviewSlotService
             throw new ArgumentException("Invalid interview type.", nameof(interviewType));
         }
 
+        return await CreateBulkSlotsInternalAsync(jobId, startTime, endTime, place, parsedType, quantity);
+    }
+
+    /// <summary>
+    /// Create one or more consecutive interview slots from a single bulk request.
+    /// When <see cref="CreateBulkInterviewSlotsDto.Quantity"/> &gt; 1 the window is split evenly
+    /// into N back-to-back slots that share the same place and interview type.
+    /// </summary>
+    public async Task<IReadOnlyList<InterviewSlots>> CreateBulkSlotsAsync(CreateBulkInterviewSlotsDto dto)
+    {
+        if (dto is null)
+        {
+            throw new ArgumentNullException(nameof(dto));
+        }
+
+        if (dto.Quantity <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(dto.Quantity), "Quantity must be at least 1.");
+        }
+
+        if (dto.TimeStart >= dto.TimeEnd)
+        {
+            throw new ArgumentException("TimeEnd must be later than TimeStart.");
+        }
+
+        return await CreateBulkSlotsInternalAsync(
+            dto.JobId,
+            dto.TimeStart,
+            dto.TimeEnd,
+            dto.Place ?? string.Empty,
+            dto.InterviewType,
+            dto.Quantity);
+    }
+
+    private async Task<IReadOnlyList<InterviewSlots>> CreateBulkSlotsInternalAsync(
+        long jobId,
+        DateTime startTime,
+        DateTime endTime,
+        string place,
+        InterviewType interviewType,
+        int quantity)
+    {
         var totalDuration = endTime - startTime;
         var slotDuration = TimeSpan.FromTicks(totalDuration.Ticks / quantity);
 
@@ -219,7 +261,7 @@ public class InterviewSlotService
                 timeStart: currentStart,
                 timeEnd: currentEnd,
                 place: place,
-                interviewType: parsedType,
+                interviewType: interviewType,
                 slotStatus: SlotStatus.Unassigned);
 
             slots.Add(slot);

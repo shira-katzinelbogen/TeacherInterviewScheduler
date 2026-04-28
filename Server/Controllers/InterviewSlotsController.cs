@@ -100,6 +100,58 @@ public sealed class InterviewSlotsController : ControllerBase
 
     // Authorized roles: Teacher
     /// <summary>
+    /// Create multiple back-to-back interview slots inside a single time window.
+    /// When <see cref="CreateBulkInterviewSlotsDto.Quantity"/> is greater than 1, the window
+    /// is split evenly into N consecutive slots sharing the same place and interview type
+    /// (e.g. 5 slots inside 1 hour produce five 12-minute slots).
+    /// </summary>
+    /// <param name="dto">The bulk creation payload.</param>
+    [HttpPost("bulk")]
+    public async Task<ActionResult<IReadOnlyList<InterviewSlots>>> CreateBulk(
+        [FromBody] CreateBulkInterviewSlotsDto dto)
+    {
+        if (dto is null)
+        {
+            return BadRequest("Request body is required.");
+        }
+
+        if (dto.Quantity <= 0)
+        {
+            return BadRequest("Quantity must be at least 1.");
+        }
+
+        if (dto.TimeEnd <= dto.TimeStart)
+        {
+            return BadRequest("TimeEnd must be later than TimeStart.");
+        }
+
+        try
+        {
+            var isValidRange = await _service.ValidateSlotTimesAsync(
+                dto.JobId,
+                dto.TimeStart,
+                dto.TimeEnd);
+
+            if (!isValidRange)
+            {
+                return BadRequest("The specified time range is invalid or overlaps existing slots.");
+            }
+
+            var created = await _service.CreateBulkSlotsAsync(dto);
+            return Ok(created);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch
+        {
+            return StatusCode(500, "An error occurred while creating the interview slots.");
+        }
+    }
+
+    // Authorized roles: Teacher
+    /// <summary>
     /// Update an existing interview slot.
     /// </summary>
     /// <param name="id">The interview slot identifier.</param>
